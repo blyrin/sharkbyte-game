@@ -150,8 +150,8 @@
 
     p {
       position: absolute;
-      bottom: 20px;
-      left: 20px;
+      bottom: 10px;
+      left: 10px;
       font-size: 12px;
       color: #aaa;
       margin: 0;
@@ -206,8 +206,8 @@
 
     .settings-panel {
       position: absolute;
-      bottom: 20px;
-      right: 20px;
+      bottom: 10px;
+      right: 10px;
       background: rgba(0, 20, 40, 0.8);
       padding: 10px;
       border: 1px solid #00ffcc;
@@ -497,6 +497,35 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+
+    /* GitHub链接样式 */
+    .github-link {
+      color: #00ffcc;
+      text-decoration: none;
+      font-size: 12px;
+      opacity: 0.7;
+      transition: all 0.3s;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: auto;
+      padding: 4px 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+    }
+
+    .github-link:hover {
+      opacity: 1;
+      border-color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.3);
+    }
+
+    .github-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
   </style>
   <!-- 通过 CDN 引入 Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -533,6 +562,16 @@
     <h1>Shark Byte</h1>
     <div class="high-score-start">最高分: <span id="high-score-start-value">0</span> TB</div>
     <button id="start-btn">开始潜入</button>
+    <div
+      style="position: absolute; top: calc(50% + 26px); left: 50%; transform: translateX(-50%); pointer-events: auto;">
+      <a href="https://github.com/blyrin/sharkbyte-game" target="_blank" rel="noopener noreferrer" class="github-link">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+        blyrin/sharkbyte-game
+      </a>
+    </div>
     <div class="settings-panel">
       <div class="setting-item">
         <label for="bgm-slider">BGM</label>
@@ -563,6 +602,15 @@
       <button id="restart-btn">重新连接</button>
       <button id="exit-fullscreen-btn-gameover">退出全屏</button>
     </div>
+    <div style="margin-top: 10px;">
+      <a href="https://github.com/blyrin/sharkbyte-game" target="_blank" rel="noopener noreferrer" class="github-link">
+        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+          <path
+            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+        </svg>
+        blyrin/sharkbyte-game
+      </a>
+    </div>
   </div>
 </div>
 
@@ -582,6 +630,15 @@
       <label for="sfx-slider-pause">SFX</label>
       <input type="range" id="sfx-slider-pause" min="0" max="1" step="0.01" value="0.8" />
     </div>
+  </div>
+  <div style="margin-top: 10px;">
+    <a href="https://github.com/blyrin/sharkbyte-game" target="_blank" rel="noopener noreferrer" class="github-link">
+      <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+        <path
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
+      </svg>
+      blyrin/sharkbyte-game
+    </a>
   </div>
 </div>
 
@@ -804,9 +861,9 @@
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200)
 
     // 渲染器
-    renderer = new THREE.WebGLRenderer({ 
+    renderer = new THREE.WebGLRenderer({
       antialias: true,
-      powerPreference: 'high-performance' // 请求高性能模式
+      powerPreference: 'high-performance', // 请求高性能模式
     })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
@@ -1196,33 +1253,33 @@
 
     if (type === 'aws') {
       geo = new THREE.BoxGeometry(2, 2, 2)
-      mat = new THREE.MeshPhongMaterial({ 
-        color: CONFIG.colors.aws, 
-        emissive: 0xff6600, 
+      mat = new THREE.MeshPhongMaterial({
+        color: CONFIG.colors.aws,
+        emissive: 0xff6600,
         emissiveIntensity: 0.5,
-        flatShading: true // 使用平面着色减少计算
+        flatShading: true, // 使用平面着色减少计算
       })
       speed = CONFIG.enemySpeedAWS
       damage = 10
       labelText = 'AWS Enforcer'
     } else if (type === 'azure') {
       geo = new THREE.TetrahedronGeometry(1.5)
-      mat = new THREE.MeshPhongMaterial({ 
-        color: CONFIG.colors.azure, 
-        emissive: 0x0000ff, 
+      mat = new THREE.MeshPhongMaterial({
+        color: CONFIG.colors.azure,
+        emissive: 0x0000ff,
         emissiveIntensity: 0.5,
-        flatShading: true // 使用平面着色减少计算
+        flatShading: true, // 使用平面着色减少计算
       })
       speed = CONFIG.enemySpeedAzure
       damage = 5
       labelText = 'Azure Sentinel'
     } else {
       geo = new THREE.IcosahedronGeometry(1.2, 0) // 降低细分级别从1到0
-      mat = new THREE.MeshPhongMaterial({ 
-        color: CONFIG.colors.gcp, 
-        wireframe: true, 
+      mat = new THREE.MeshPhongMaterial({
+        color: CONFIG.colors.gcp,
+        wireframe: true,
         emissive: 0xffffff,
-        flatShading: true // 使用平面着色减少计算
+        flatShading: true, // 使用平面着色减少计算
       })
       speed = CONFIG.enemySpeedGCP
       damage = 20
