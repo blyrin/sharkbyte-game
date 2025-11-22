@@ -637,7 +637,8 @@
     staminaRecoverRate: 0.2, // 每帧恢复
     minStaminaToBoost: 1, // 最低冲刺需求
     recoverStamina: 40, // 咬断电缆恢复的耐力
-    enemyRemoveDistance: 150, // 敌人超过此距离后删除
+    enemyRemoveDistance: 100, // 敌人超过此距离后删除
+    maxEnemies: 80, // 最大敌人数
     enemySpeedAWS: 0.45, // AWS 敌人移动速度
     enemySpeedAzure: 0.5, // Azure 敌人移动速度
     enemySpeedGCP: 0.5, // GCP 敌人移动速度
@@ -800,6 +801,7 @@
 
     // 渲染器
     renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
     renderer.shadowMap.enabled = true
     document.getElementById('game-container').appendChild(renderer.domElement)
@@ -1120,34 +1122,49 @@
   function createLabel(text) {
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
+
     const fontSize = 40
+    // 先用逻辑像素测量文本宽度
     ctx.font = `bold ${fontSize}px "Courier New"`
     const textMetrics = ctx.measureText(text)
-    const textWidth = textMetrics.width
+    const logicalWidth = Math.ceil(textMetrics.width + 20)
+    const logicalHeight = Math.ceil(fontSize + 20)
 
-    canvas.width = textWidth + 20
-    canvas.height = fontSize + 20
+    // 按 DPR 放大实际像素尺寸，保持清晰
+    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    canvas.width = Math.max(1, Math.floor(logicalWidth * dpr))
+    canvas.height = Math.max(1, Math.floor(logicalHeight * dpr))
 
-    // 调整画布大小后重新设置字体
+    // 将绘图坐标系缩放回逻辑像素，避免视觉尺寸变化
+    ctx.scale(dpr, dpr)
+
+    // 重新设置绘制样式
     ctx.font = `bold ${fontSize}px "Courier New"`
     ctx.fillStyle = '#ff3333'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     ctx.shadowColor = '#ff3333'
     ctx.shadowBlur = 5
-    ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+    ctx.fillText(text, logicalWidth / 2, logicalHeight / 2)
 
     const texture = new THREE.CanvasTexture(canvas)
+    // 文字纹理使用线性过滤并禁用 mipmap 以减少模糊
+    texture.minFilter = THREE.LinearFilter
+    texture.magFilter = THREE.LinearFilter
+    texture.generateMipmaps = false
+    texture.needsUpdate = true
+
     const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
     const sprite = new THREE.Sprite(material)
-    // 缩放精灵到合理的世界单位大小
-    sprite.scale.set(canvas.width / 60, canvas.height / 60, 1)
+    // 使用逻辑像素控制世界尺寸（不受 DPR 放大影响）
+    sprite.scale.set(logicalWidth / 60, logicalHeight / 60, 1)
     return sprite
   }
 
   // === 敌人生成逻辑 ===
   function spawnEnemy() {
     if (!gameState.isPlaying) return
+    if (enemies.length >= CONFIG.maxEnemies) return
 
     const typeRand = Math.random()
     let type = 'aws'
@@ -1424,6 +1441,7 @@
   function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight
     camera.updateProjectionMatrix()
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
   }
 
