@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>Shark Byte</title>
   <style>
     *, ::before, ::after {
@@ -287,6 +288,108 @@
       border-top: 1px solid #334455;
       padding-top: 10px;
     }
+
+    /* 移动端适配 */
+    @media screen and (max-width: 768px) {
+      #ui-layer {
+        padding: 10px;
+      }
+
+      .hud-top {
+        font-size: 16px;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      #score-display {
+        font-size: 18px;
+        order: 2;
+      }
+
+      .health-bar-container,
+      .stamina-bar-container {
+        width: 100%;
+        max-width: 200px;
+        height: 16px;
+      }
+
+      .hud-top > div:last-child {
+        order: 1;
+        width: 100%;
+        max-width: 200px;
+      }
+
+      h1 {
+        font-size: 36px;
+      }
+
+      p {
+        font-size: 14px;
+      }
+
+      button {
+        padding: 12px 30px;
+        font-size: 18px;
+      }
+
+      .settings-panel {
+        width: 90%;
+        max-width: 280px;
+      }
+
+      .pause-content {
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+      }
+
+      .pause-buttons {
+        width: 90%;
+        max-width: 250px;
+      }
+
+      .pause-info {
+        width: 90%;
+        max-width: 280px;
+      }
+
+      #pause-menu h2 {
+        font-size: 32px;
+      }
+    }
+
+    @media screen and (max-width: 480px) {
+      .hud-top {
+        font-size: 14px;
+      }
+
+      #score-display {
+        font-size: 16px;
+      }
+
+      .health-bar-container,
+      .stamina-bar-container {
+        max-width: 150px;
+        height: 14px;
+      }
+
+      .hud-top > div:last-child {
+        max-width: 150px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      p {
+        font-size: 12px;
+      }
+
+      button {
+        padding: 10px 24px;
+        font-size: 16px;
+      }
+    }
   </style>
   <!-- 通过 CDN 引入 Three.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -319,9 +422,11 @@
     <h1>Shark Byte</h1>
     <p>
       任务：摧毁海底光缆。<br />
-      控制：鼠标移动瞄准，<br />
-      <span class="key">左键</span> 冲刺/咬碎，<span class="key">右键</span> 后视镜。<span class="key">P</span>
-      暂停。<br />
+      <span id="control-instruction">
+        控制：鼠标移动瞄准，<br />
+        <span class="key">左键</span> 冲刺/咬碎，<span class="key">右键</span> 后视镜。<span class="key">P</span>
+        暂停。
+      </span><br />
       警告：检测到云服务防御系统 (AWS, Azure, GCP)。
     </p>
     <button id="start-btn">开始潜入</button>
@@ -349,10 +454,8 @@
     </div>
     <div class="pause-info">
       <h3>操作说明</h3>
-      <p>移动鼠标: 瞄准方向</p>
-      <p><span class="key">左键</span>: 冲刺 / 咬碎光缆</p>
-      <p><span class="key">右键</span>: 后视镜</p>
-      <p><span class="key">P</span>: 暂停</p>
+      <p id="pause-control-instruction">移动鼠标: 瞄准方向<br><span class="key">左键</span>: 冲刺 / 咬碎光缆<br><span
+        class="key">右键</span>: 后视镜<br><span class="key">P</span>: 暂停</p>
 
       <h3>游戏规则</h3>
       <p>摧毁海底光缆以切断网络连接。</p>
@@ -373,12 +476,16 @@
 </div>
 
 <script type="module">
+  // === 移动设备检测 ===
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
   // === 游戏配置 ===
   const CONFIG = {
     sharkSpeed: 0.4,
     boostSpeed: 1,
     turnSpeed: 0.1, // 平滑速度
-    mouseSensitivity: 0.004, // 灵敏度
+    mouseSensitivity: 0.004, // 灵敏度 (桌面)
+    gyroSensitivity: 0.03, // 陀螺仪灵敏度 (移动)
     cameraDistance: 15,
     rollFactor: 0.2, // 侧倾系数
     fogColor: 0x001020,
@@ -430,6 +537,15 @@
   let isBoosting = false
   let isLookingBack = false // 观察身后状态
   let clock = new THREE.Clock()
+
+  // 陀螺仪相关变量
+  let gyroAlpha = 0 // 设备方向 (Z轴旋转)
+  let gyroBeta = 0  // 设备俯仰 (X轴旋转)
+  let gyroGamma = 0 // 设备侧倾 (Y轴旋转)
+  let gyroInitialized = false
+  let initialAlpha = 0
+  let initialBeta = 0
+  let initialGamma = 0
 
   // 帧率控制变量
   const fpsLimit = 60
@@ -494,19 +610,31 @@
 
     // 事件监听
     window.addEventListener('resize', onWindowResize, false)
-    document.addEventListener('mousemove', onMouseMoveInfinite, false)
-    document.addEventListener('mousedown', onMouseDown, false)
-    document.addEventListener('mouseup', onMouseUp, false)
+
+    if (isMobile) {
+      // 移动端：使用触摸和陀螺仪
+      document.addEventListener('touchstart', onTouchStart)
+      document.addEventListener('touchend', onTouchEnd)
+      window.addEventListener('deviceorientation', onDeviceOrientation, false)
+      // 更新UI提示
+      document.getElementById('control-instruction').innerHTML = '控制：倾斜设备瞄准，<br />按住屏幕冲刺/咬碎。'
+      document.getElementById('pause-control-instruction').innerHTML = '倾斜设备: 瞄准方向<br>按住屏幕: 冲刺 / 咬碎光缆'
+    } else {
+      // 桌面端：使用鼠标
+      document.addEventListener('mousemove', onMouseMoveInfinite, false)
+      document.addEventListener('mousedown', onMouseDown, false)
+      document.addEventListener('mouseup', onMouseUp, false)
+      // 监听指针锁定状态变化
+      document.addEventListener('pointerlockchange', () => {
+        if (document.pointerLockElement !== document.body && gameState.isPlaying) {
+          togglePause(true)
+        }
+      })
+    }
+
     document.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 
-    // 监听指针锁定状态变化
-    document.addEventListener('pointerlockchange', () => {
-      if (document.pointerLockElement !== document.body && gameState.isPlaying) {
-        togglePause(true)
-      }
-    })
-
-    startBtn.addEventListener('click', startGame)
+    startBtn.addEventListener(isMobile ? 'touchstart' : 'click', startGame)
 
     bgmSlider.addEventListener('input', (e) => {
       const volume = parseFloat(e.target.value)
@@ -526,14 +654,14 @@
       }
     })
 
-    resumeBtn.addEventListener('click', () => togglePause(false))
+    resumeBtn.addEventListener(isMobile ? 'touchstart' : 'click', () => togglePause(false))
 
-    restartBtnPause.addEventListener('click', () => {
+    restartBtnPause.addEventListener(isMobile ? 'touchstart' : 'click', () => {
       togglePause(false)
       startGame()
     })
 
-    exitFullscreenBtn.addEventListener('click', () => {
+    exitFullscreenBtn.addEventListener(isMobile ? 'touchstart' : 'click', () => {
       if (document.fullscreenElement) {
         document.exitFullscreen()
       }
@@ -843,6 +971,95 @@
     })
   }
 
+  // === 陀螺仪权限请求 ===
+  async function requestGyroPermission() {
+    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission()
+        if (permission === 'granted') {
+          console.log('陀螺仪权限已授予')
+          return true
+        } else {
+          console.warn('陀螺仪权限被拒绝')
+          return false
+        }
+      } catch (error) {
+        console.error('请求陀螺仪权限失败:', error)
+        return false
+      }
+    }
+    return true
+  }
+
+  // === 屏幕方向锁定 ===
+  async function lockOrientation() {
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock('landscape')
+        return true
+      }
+    } catch (error) {
+      console.log('屏幕方向锁定不支持或失败:', error)
+      return false
+    }
+  }
+
+  // === 陀螺仪输入处理 ===
+  function onDeviceOrientation(event) {
+    if (!gameState.isPlaying || gameState.isPaused) return
+
+    const alpha = event.alpha || 0  // Z轴 (0-360)
+    const beta = event.beta || 0    // X轴 (-180 to 180)
+    const gamma = event.gamma || 0  // Y轴 (-90 to 90)
+
+    // 初始化基准值
+    if (!gyroInitialized) {
+      initialAlpha = alpha
+      initialBeta = beta
+      initialGamma = gamma
+      gyroInitialized = true
+      return
+    }
+
+    // 计算相对旋转
+    let deltaAlpha = alpha - initialAlpha
+    let deltaBeta = beta - initialBeta
+    let deltaGamma = gamma - initialGamma
+
+    // 处理alpha的360度跳变
+    if (deltaAlpha > 180) deltaAlpha -= 360
+    if (deltaAlpha < -180) deltaAlpha += 360
+
+    // 横屏模式下的映射：
+    // gamma (设备左右倾斜) -> 控制偏航 (Y轴旋转)
+    // beta (设备前后倾斜) -> 控制俯仰 (X轴旋转)
+
+    sharkEuler.y = -deltaGamma * CONFIG.gyroSensitivity
+    sharkEuler.x = (deltaBeta - 45) * CONFIG.gyroSensitivity * 0.5 // 调整基准角度
+
+    // 限制俯仰角
+    sharkEuler.x = Math.max(-1.4, Math.min(1.4, sharkEuler.x))
+  }
+
+  // === 触摸输入处理 ===
+  function onTouchStart(event) {
+    if (!gameState.isPlaying) return
+    if (gameState.isPaused) return
+
+    event.preventDefault()
+
+    // 触摸开始冲刺
+    if (gameState.stamina >= CONFIG.minStaminaToBoost) {
+      isBoosting = true
+      soundManager.playBoost()
+    }
+  }
+
+  function onTouchEnd(event) {
+    event.preventDefault()
+    isBoosting = false
+  }
+
   // === 输入处理（鼠标控制）===
   function onMouseMoveInfinite(event) {
     if (isLookingBack) return
@@ -867,7 +1084,8 @@
       return
     }
 
-    if (document.pointerLockElement !== document.body) {
+    // 只在桌面端使用指针锁定
+    if (!isMobile && document.pointerLockElement !== document.body) {
       document.body.requestPointerLock()
     }
 
@@ -893,13 +1111,17 @@
 
     if (gameState.isPaused) {
       pauseMenu.style.display = 'flex'
-      document.exitPointerLock()
+      if (!isMobile) {
+        document.exitPointerLock()
+      }
       // 打开暂停菜单时同步滑块
       bgmSliderPause.value = bgmSlider.value
       sfxSliderPause.value = sfxSlider.value
     } else {
       pauseMenu.style.display = 'none'
-      document.body.requestPointerLock()
+      if (!isMobile) {
+        document.body.requestPointerLock()
+      }
     }
   }
 
@@ -911,17 +1133,43 @@
 
   // === 游戏逻辑 ===
   async function startGame() {
-    try {
+    // 移动端处理
+    if (isMobile) {
+      // 请求陀螺仪权限
+      const gyroPermission = await requestGyroPermission()
+      console.log(gyroPermission)
+      if (!gyroPermission) {
+        window.confirm('陀螺仪不可用，无法开始游戏！')
+        return
+      }
+      // 重置陀螺仪状态
+      gyroInitialized = false
+      // 锁定横屏
+      const lock = await lockOrientation()
+      if (!lock) {
+        window.confirm('屏幕方向锁定失败，无法开始游戏！')
+        return
+      }
+      // 尝试全屏
       if (document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen()
+        console.log('全屏成功')
       }
-    } catch (e) {
-      console.log('全屏请求被拒绝或不支持')
+    } else {
+      // 桌面端处理
+      try {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen()
+        }
+      } catch (e) {
+        console.log('全屏请求被拒绝或不支持')
+      }
+
+      document.body.requestPointerLock().catch((err) => {console.error(err)})
     }
 
+    console.log('初始化音效和游戏状态...')
     soundManager.playBGM()
-
-    document.body.requestPointerLock().catch((err) => {console.error(err)})
 
     gameState.isPlaying = true
     gameState.isPaused = false
@@ -1119,12 +1367,13 @@
     }
 
     // 1. 鲨鱼运动逻辑（更新）
+    // 注意：陀螺仪在 onDeviceOrientation 中已更新 sharkEuler
     const targetPitch = sharkEuler.x
     const targetYaw = sharkEuler.y
 
     // 使用四元数 Slerp 进行平滑旋转
 
-    // 1.1. 根据鼠标输入的俯仰角（X）和偏航角（Y）创建目标欧拉角
+    // 1.1. 根据输入的俯仰角（X）和偏航角（Y）创建目标欧拉角
     // 使用 'YXZ' 顺序，这在飞行/自由移动控制中较为常用
     const targetEuler = new THREE.Euler(targetPitch, targetYaw, 0, 'YXZ')
     targetRotation.setFromEuler(targetEuler)
