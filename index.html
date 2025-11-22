@@ -82,13 +82,13 @@
     .hud-top {
       display: flex;
       justify-content: space-between;
-      font-size: 24px;
+      font-size: 16px;
       font-weight: bold;
     }
 
     .health-bar-container {
-      width: 300px;
-      height: 20px;
+      width: 200px;
+      height: 12px;
       border: 2px solid #ff3333;
       background: rgba(0, 0, 0, 0.5);
     }
@@ -102,8 +102,8 @@
     }
 
     .stamina-bar-container {
-      width: 300px;
-      height: 20px;
+      width: 200px;
+      height: 12px;
       border: 2px solid #00ff00;
       background: rgba(0, 0, 0, 0.5);
     }
@@ -296,25 +296,23 @@
       }
 
       .hud-top {
-        font-size: 16px;
+        font-size: 12px;
         flex-direction: column;
-        gap: 10px;
+        gap: 4px;
       }
 
       #score-display {
-        font-size: 18px;
-        order: 2;
+        font-size: 14px;
       }
 
       .health-bar-container,
       .stamina-bar-container {
         width: 100%;
         max-width: 200px;
-        height: 16px;
+        height: 12px;
       }
 
       .hud-top > div:last-child {
-        order: 1;
         width: 100%;
         max-width: 200px;
       }
@@ -402,18 +400,12 @@
 <div id="ui-layer">
   <div class="hud-top">
     <div id="score-display">断网进度: 0 TB</div>
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-      <div>
-        血量:
-        <div class="health-bar-container">
-          <div id="health-fill"></div>
-        </div>
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div class="health-bar-container">
+        <div id="health-fill"></div>
       </div>
-      <div>
-        耐力:
-        <div class="stamina-bar-container">
-          <div id="stamina-fill"></div>
-        </div>
+      <div class="stamina-bar-container">
+        <div id="stamina-fill"></div>
       </div>
     </div>
   </div>
@@ -539,9 +531,6 @@
   let clock = new THREE.Clock()
 
   // 陀螺仪相关变量
-  let gyroAlpha = 0 // 设备方向 (Z轴旋转)
-  let gyroBeta = 0  // 设备俯仰 (X轴旋转)
-  let gyroGamma = 0 // 设备侧倾 (Y轴旋转)
   let gyroInitialized = false
   let initialAlpha = 0
   let initialBeta = 0
@@ -991,19 +980,6 @@
     return true
   }
 
-  // === 屏幕方向锁定 ===
-  async function lockOrientation() {
-    try {
-      if (screen.orientation && screen.orientation.lock) {
-        await screen.orientation.lock('landscape')
-        return true
-      }
-    } catch (error) {
-      console.log('屏幕方向锁定不支持或失败:', error)
-      return false
-    }
-  }
-
   // === 陀螺仪输入处理 ===
   function onDeviceOrientation(event) {
     if (!gameState.isPlaying || gameState.isPaused) return
@@ -1022,13 +998,10 @@
     }
 
     // 计算相对旋转
-    let deltaAlpha = alpha - initialAlpha
     let deltaBeta = beta - initialBeta
     let deltaGamma = gamma - initialGamma
 
     // 处理alpha的360度跳变
-    if (deltaAlpha > 180) deltaAlpha -= 360
-    if (deltaAlpha < -180) deltaAlpha += 360
 
     // 横屏模式下的映射：
     // gamma (设备左右倾斜) -> 控制偏航 (Y轴旋转)
@@ -1131,10 +1104,20 @@
     renderer.setSize(window.innerWidth, window.innerHeight)
   }
 
+  // === 横屏检测 ===
+  function isLandscape() {
+    return window.innerWidth > window.innerHeight
+  }
+
   // === 游戏逻辑 ===
   async function startGame() {
     // 移动端处理
     if (isMobile) {
+      // 检测横屏
+      if (!isLandscape()) {
+        window.confirm('请将设备横置后开始游戏！')
+        return
+      }
       // 请求陀螺仪权限
       const gyroPermission = await requestGyroPermission()
       console.log(gyroPermission)
@@ -1144,12 +1127,6 @@
       }
       // 重置陀螺仪状态
       gyroInitialized = false
-      // 锁定横屏
-      const lock = await lockOrientation()
-      if (!lock) {
-        window.confirm('屏幕方向锁定失败，无法开始游戏！')
-        return
-      }
       // 尝试全屏
       if (document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen()
