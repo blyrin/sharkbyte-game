@@ -1485,30 +1485,84 @@
     console.log('初始化音效和游戏状态...')
     soundManager.playBGM()
 
+    // 重置所有 gameState 状态
     gameState.isPlaying = true
     gameState.isPaused = false
     gameState.score = 0
     gameState.cablesCut = 0
-    gameState.health = 100
-    gameState.stamina = 100
-    uiMessage.style.display = 'none'
+    gameState.cableCount = 3 // 重置电缆数量
+    gameState.health = CONFIG.maxHealth
+    gameState.stamina = CONFIG.maxStamina
+    gameState.time = 0
 
+    // 重置全局控制变量
+    isBoosting = false
+    isLookingBack = false
+
+    // 重置虚拟摇杆状态
+    joystickActive = false
+    joystickTouchId = null
+    joystickStartX = 0
+    joystickStartY = 0
+    joystickDeltaX = 0
+    joystickDeltaY = 0
+
+    // 重置虚拟摇杆UI
+    const joystickStick = document.getElementById('joystick-stick')
+    if (joystickStick) {
+      joystickStick.classList.remove('active')
+      joystickStick.style.transform = 'translate(-50%, -50%)'
+    }
+
+    // 重置移动端按钮状态
+    const sprintBtn = document.getElementById('sprint-button')
+    if (sprintBtn) {
+      sprintBtn.classList.remove('active', 'disabled')
+    }
+    const backBtn = document.getElementById('back-button')
+    if (backBtn) {
+      backBtn.classList.remove('active')
+    }
+
+    // 隐藏UI界面
+    uiMessage.style.display = 'none'
     document.getElementById('game-over-screen').style.display = 'none'
 
+    // 重置鲨鱼位置和旋转
     sharkContainer.position.set(0, 0, 0)
     sharkContainer.quaternion.identity()
     sharkEuler = { x: 0, y: 0 }
+    targetRotation.identity()
 
+    // 清理敌人
     enemies.forEach((e) => {
       scene.remove(e.group)
       if (e.indicatorEl) e.indicatorEl.remove()
     })
     enemies = []
 
+    // 清理电缆
     cables.forEach((c) => {
+      scene.remove(c.mesh)
       if (c.indicatorEl) c.indicatorEl.remove()
     })
+    cables = []
+
+    // 清理爆炸特效
+    explosions.forEach((exp) => {
+      scene.remove(exp.mesh)
+      exp.mesh.geometry.dispose()
+      exp.mesh.material.dispose()
+    })
+    explosions = []
+
+    // 重置时钟
+    clock = new THREE.Clock()
+
+    // 生成新电缆
     generateCables()
+
+    // 显示游戏UI并更新HUD
     toggleGameUI(true)
     updateHUD()
   }
@@ -1785,7 +1839,7 @@
     sharkMesh.children[0].rotation.y = Math.sin(time * (isBoosting ? 20 : 8)) * 0.5
 
     // 2. 光缆逻辑与碰撞
-    const biteRadius = 6.0
+    const biteRadius = 8.0
 
     for (let i = cables.length - 1; i >= 0; i--) {
       const cable = cables[i]
