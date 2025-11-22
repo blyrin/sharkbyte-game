@@ -7,6 +7,8 @@
   <title>Shark Byte</title>
   <style>
     *, ::before, ::after {
+      margin: 0;
+      padding: 0;
       box-sizing: border-box;
     }
 
@@ -89,30 +91,30 @@
     .health-bar-container {
       width: 200px;
       height: 12px;
-      border: 2px solid #ff3333;
+      border: 2px solid #00ff00;
       background: rgba(0, 0, 0, 0.5);
     }
 
     #health-fill {
       width: 100%;
       height: 100%;
-      background-color: #ff3333;
-      box-shadow: 0 0 10px #ff3333;
+      background-color: #00ff00;
+      box-shadow: 0 0 10px #00ff00;
       transition: width 0.2s;
     }
 
     .stamina-bar-container {
       width: 200px;
       height: 12px;
-      border: 2px solid #00ff00;
+      border: 2px solid #00ffcc;
       background: rgba(0, 0, 0, 0.5);
     }
 
     #stamina-fill {
       width: 100%;
       height: 100%;
-      background-color: #00ff00;
-      box-shadow: 0 0 10px #00ff00;
+      background-color: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
       transition: width 0.2s;
     }
 
@@ -123,38 +125,50 @@
 
     #message-center {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      pointer-events: auto; /* 允许点击按钮 */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* 默认不拦截事件 */
+      display: flex;
+      flex-direction: column;
     }
 
     h1 {
-      font-size: 60px;
-      margin: 0 0 20px 0;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      font-size: 48px;
+      margin: 0;
       background: linear-gradient(to bottom, #00ffcc, #0055aa);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
       filter: drop-shadow(0 0 10px rgba(0, 255, 204, 0.5));
+      pointer-events: none;
     }
 
     p {
-      font-size: 18px;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      font-size: 12px;
       color: #aaa;
-      margin-bottom: 30px;
+      margin: 0;
       background: rgba(0, 0, 0, 0.7);
-      padding: 10px;
+      padding: 8px;
       border-radius: 5px;
+      max-width: 300px;
+      text-align: left;
+      pointer-events: none;
     }
 
     button {
       background: transparent;
       border: 2px solid #00ffcc;
       color: #00ffcc;
-      padding: 15px 40px;
-      font-size: 24px;
+      padding: 4px 10px;
+      font-size: 16px;
       font-family: inherit;
       cursor: pointer;
       text-transform: uppercase;
@@ -191,26 +205,35 @@
     }
 
     .settings-panel {
-      margin-top: 20px;
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
       background: rgba(0, 20, 40, 0.8);
-      padding: 15px;
+      padding: 10px;
       border: 1px solid #00ffcc;
       border-radius: 8px;
       text-align: left;
-      width: 300px;
-      margin-left: auto;
-      margin-right: auto;
+      width: 200px;
+      pointer-events: auto; /* 允许交互 */
+    }
+
+    #start-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: auto; /* 允许点击 */
     }
 
     .setting-item {
-      margin-bottom: 10px;
+      margin-bottom: 6px;
     }
 
     .setting-item label {
       display: block;
       margin-bottom: 5px;
       color: #00ffcc;
-      font-size: 16px;
+      font-size: 14px;
     }
 
     .setting-item input[type='range'] {
@@ -238,155 +261,241 @@
     }
 
     #pause-menu h2 {
-      font-size: 48px;
+      font-size: 24px;
       color: #00ffcc;
-      margin-bottom: 30px;
+      margin-bottom: 10px;
       text-shadow: 0 0 15px #00ffcc;
       letter-spacing: 5px;
-    }
-
-    .pause-content {
-      display: flex;
-      gap: 40px;
-      align-items: flex-start;
     }
 
     .pause-buttons {
       display: flex;
       flex-direction: column;
-      gap: 20px;
-      width: 250px;
-    }
-
-    .pause-info {
-      width: 300px;
-      text-align: left;
-      background: rgba(0, 20, 40, 0.6);
-      padding: 20px;
-      border: 1px solid #00ffcc;
-      border-radius: 8px;
-      color: #ddd;
-    }
-
-    .pause-info h3 {
-      color: #00ffcc;
-      margin-top: 0;
-      border-bottom: 1px solid #00ffcc;
-      padding-bottom: 5px;
-    }
-
-    .pause-info p {
-      font-size: 14px;
-      background: none;
-      padding: 0;
-      margin-bottom: 10px;
-      color: #ccc;
+      gap: 6px;
+      width: 200px;
     }
 
     .pause-settings {
-      margin-top: 20px;
-      border-top: 1px solid #334455;
-      padding-top: 10px;
+      margin-top: 6px;
+      background: rgba(0, 20, 40, 0.6);
+      padding: 10px;
+      border: 1px solid #00ffcc;
+      border-radius: 8px;
+      width: 200px;
     }
 
-    /* 移动端适配 */
-    @media screen and (max-width: 768px) {
-      #ui-layer {
-        padding: 10px;
-      }
-
-      .hud-top {
-        font-size: 12px;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      #score-display {
-        font-size: 14px;
-      }
-
-      .health-bar-container,
-      .stamina-bar-container {
-        width: 100%;
-        max-width: 200px;
-        height: 12px;
-      }
-
-      .hud-top > div:last-child {
-        width: 100%;
-        max-width: 200px;
-      }
-
-      h1 {
-        font-size: 36px;
-      }
-
-      p {
-        font-size: 14px;
-      }
-
-      button {
-        padding: 12px 30px;
-        font-size: 18px;
-      }
-
-      .settings-panel {
-        width: 90%;
-        max-width: 280px;
-      }
-
-      .pause-content {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
-      }
-
-      .pause-buttons {
-        width: 90%;
-        max-width: 250px;
-      }
-
-      .pause-info {
-        width: 90%;
-        max-width: 280px;
-      }
-
-      #pause-menu h2 {
-        font-size: 32px;
-      }
+    /* 移动端暂停按钮 */
+    #pause-button-mobile {
+      position: fixed;
+      top: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 8px;
+      background: rgba(255, 204, 0, 0.3);
+      border: 3px solid #ffcc00;
+      color: #ffcc00;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+      user-select: none;
+      touch-action: none;
+      transition: all 0.2s;
     }
 
-    @media screen and (max-width: 480px) {
-      .hud-top {
-        font-size: 14px;
-      }
+    #pause-button-mobile:active {
+      background: rgba(255, 204, 0, 0.6);
+      box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+      transform: scale(0.95);
+    }
 
-      #score-display {
-        font-size: 16px;
-      }
+    /* 移动端冲刺按钮 */
+    #sprint-button {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(0, 255, 204, 0.3);
+      border: 3px solid #00ffcc;
+      color: #00ffcc;
+      font-size: 14px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      user-select: none;
+      touch-action: none;
+      transition: all 0.1s;
+    }
 
-      .health-bar-container,
-      .stamina-bar-container {
-        max-width: 150px;
-        height: 14px;
-      }
+    #sprint-button.active {
+      background: rgba(0, 255, 204, 0.6);
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.8);
+      transform: scale(0.95);
+    }
 
-      .hud-top > div:last-child {
-        max-width: 150px;
-      }
+    #sprint-button.disabled {
+      opacity: 0.4;
+      border-color: #666;
+      color: #666;
+    }
 
-      h1 {
-        font-size: 28px;
-      }
+    /* 移动端后视按钮 */
+    #back-button {
+      position: fixed;
+      bottom: 130px;
+      left: 160px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(255, 153, 0, 0.3);
+      border: 3px solid #ff9900;
+      color: #ff9900;
+      font-size: 12px;
+      font-weight: bold;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 100;
+      box-shadow: 0 0 20px rgba(255, 153, 0, 0.5);
+      user-select: none;
+      touch-action: none;
+      transition: all 0.1s;
+    }
 
-      p {
-        font-size: 12px;
-      }
+    #back-button.active {
+      background: rgba(255, 153, 0, 0.6);
+      box-shadow: 0 0 30px rgba(255, 153, 0, 0.8);
+      transform: scale(0.95);
+    }
 
-      button {
-        padding: 10px 24px;
-        font-size: 16px;
-      }
+    /* 虚拟摇杆样式 */
+    #joystick-container {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 120px;
+      height: 120px;
+      display: none;
+      pointer-events: auto;
+      z-index: 100;
+    }
+
+    #joystick-base {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: rgba(0, 255, 204, 0.2);
+      border: 3px solid #00ffcc;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+    }
+
+    #joystick-stick {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0, 255, 204, 0.6);
+      border: 2px solid #00ffcc;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+      transition: all 0.1s;
+    }
+
+    #joystick-stick.active {
+      background: rgba(0, 255, 204, 0.8);
+      box-shadow: 0 0 25px rgba(0, 255, 204, 0.8);
+    }
+
+    /* 游戏UI隐藏类 */
+    .hide-game-ui {
+      display: none !important;
+    }
+
+    /* 游戏结束界面样式 */
+    #game-over-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      pointer-events: auto;
+      background: rgba(0, 5, 16, 0.7);
+      backdrop-filter: blur(5px);
+    }
+
+    #game-over-screen h1 {
+      position: static;
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+
+    #game-over-screen p {
+      position: static;
+      font-size: 14px;
+      background: transparent;
+      color: #00ffcc;
+      text-align: center;
+    }
+
+    #game-over-screen button {
+      pointer-events: auto;
+    }
+
+    #final-score {
+      color: #ccff00;
+      font-weight: bold;
+      text-shadow: 0 0 10px #ccff00;
+    }
+
+    #high-score-display {
+      color: #ff9900;
+      text-shadow: 0 0 10px #ff9900;
+      font-size: 14px;
+      margin-left: 20px;
+    }
+
+    .high-score-start {
+      position: absolute;
+      top: 100px;
+      left: 20px;
+      color: #ff9900;
+      text-shadow: 0 0 10px #ff9900;
+      font-size: 18px;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    .new-record {
+      color: #ff3333;
+      font-size: 18px;
+      font-weight: bold;
+      text-shadow: 0 0 15px #ff3333;
+      animation: pulse 1s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
   </style>
   <!-- 通过 CDN 引入 Three.js -->
@@ -395,11 +504,21 @@
 <body>
 <div id="game-container"></div>
 <div id="damage-overlay"></div>
-<div id="indicators-container"></div>
+<div id="indicators-container" class="hide-game-ui"></div>
+<div id="pause-button-mobile" class="hide-game-ui">PAUSE</div>
+<div id="sprint-button" class="hide-game-ui">DASH</div>
+<div id="back-button" class="hide-game-ui">BACK</div>
+<div id="joystick-container" class="hide-game-ui">
+  <div id="joystick-base"></div>
+  <div id="joystick-stick"></div>
+</div>
 
 <div id="ui-layer">
-  <div class="hud-top">
-    <div id="score-display">断网进度: 0 TB</div>
+  <div class="hud-top hide-game-ui">
+    <div>
+      <div id="score-display">断网进度: 0 TB</div>
+      <div id="high-score-display">最高分: 0 TB</div>
+    </div>
     <div style="display: flex; flex-direction: column; gap: 6px;">
       <div class="health-bar-container">
         <div id="health-fill"></div>
@@ -412,6 +531,18 @@
 
   <div id="message-center">
     <h1>Shark Byte</h1>
+    <div class="high-score-start">最高分: <span id="high-score-start-value">0</span> TB</div>
+    <button id="start-btn">开始潜入</button>
+    <div class="settings-panel">
+      <div class="setting-item">
+        <label for="bgm-slider">BGM</label>
+        <input type="range" id="bgm-slider" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+      <div class="setting-item">
+        <label for="sfx-slider">SFX</label>
+        <input type="range" id="sfx-slider" min="0" max="1" step="0.01" value="0.8" />
+      </div>
+    </div>
     <p>
       任务：摧毁海底光缆。<br />
       <span id="control-instruction">
@@ -421,48 +552,35 @@
       </span><br />
       警告：检测到云服务防御系统 (AWS, Azure, GCP)。
     </p>
-    <button id="start-btn">开始潜入</button>
+  </div>
 
-    <div class="settings-panel">
-      <div class="setting-item">
-        <label for="bgm-slider">BGM Volume</label>
-        <input type="range" id="bgm-slider" min="0" max="1" step="0.01" value="0.8" />
-      </div>
-      <div class="setting-item">
-        <label for="sfx-slider">SFX Volume</label>
-        <input type="range" id="sfx-slider" min="0" max="1" step="0.01" value="0.8" />
-      </div>
+  <div id="game-over-screen" style="display: none;">
+    <h1>连接断开</h1>
+    <p id="game-over-message">任务失败。<br>你切断了 <span id="final-score">0</span> TB 的数据。</p>
+    <p id="new-record-message" class="new-record" style="display: none;">🎉 新纪录！🎉</p>
+    <p style="color: #ff9900; font-size: 16px;">最高分: <span id="high-score-game-over">0</span> TB</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
+      <button id="restart-btn">重新连接</button>
+      <button id="exit-fullscreen-btn-gameover">退出全屏</button>
     </div>
   </div>
 </div>
 
 <div id="pause-menu">
   <h2>PAUSED</h2>
-  <div class="pause-content">
-    <div class="pause-buttons">
-      <button id="resume-btn">继续游戏</button>
-      <button id="restart-btn-pause">重新开始</button>
-      <button id="exit-fullscreen-btn">退出全屏</button>
+  <div class="pause-buttons">
+    <button id="resume-btn">继续游戏</button>
+    <button id="restart-btn-pause">重新开始</button>
+    <button id="exit-fullscreen-btn">退出全屏</button>
+  </div>
+  <div class="pause-settings">
+    <div class="setting-item">
+      <label for="bgm-slider-pause">BGM</label>
+      <input type="range" id="bgm-slider-pause" min="0" max="1" step="0.01" value="0.8" />
     </div>
-    <div class="pause-info">
-      <h3>操作说明</h3>
-      <p id="pause-control-instruction">移动鼠标: 瞄准方向<br><span class="key">左键</span>: 冲刺 / 咬碎光缆<br><span
-        class="key">右键</span>: 后视镜<br><span class="key">P</span>: 暂停</p>
-
-      <h3>游戏规则</h3>
-      <p>摧毁海底光缆以切断网络连接。</p>
-      <p>躲避或摧毁云服务防御无人机。</p>
-
-      <div class="pause-settings">
-        <div class="setting-item">
-          <label for="bgm-slider-pause">BGM Volume</label>
-          <input type="range" id="bgm-slider-pause" min="0" max="1" step="0.01" value="0.8" />
-        </div>
-        <div class="setting-item">
-          <label for="sfx-slider-pause">SFX Volume</label>
-          <input type="range" id="sfx-slider-pause" min="0" max="1" step="0.01" value="0.8" />
-        </div>
-      </div>
+    <div class="setting-item">
+      <label for="sfx-slider-pause">SFX</label>
+      <input type="range" id="sfx-slider-pause" min="0" max="1" step="0.01" value="0.8" />
     </div>
   </div>
 </div>
@@ -471,13 +589,44 @@
   // === 移动设备检测 ===
   const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
+  // === 横屏检测 ===
+  function checkOrientation() {
+    if (!isMobile) return true
+    return window.innerWidth > window.innerHeight
+  }
+
+  // === LocalStorage 工具函数 ===
+  const Storage = {
+    loadHighScore() {
+      const saved = localStorage.getItem('sharkByteHighScore')
+      return saved ? parseInt(saved, 10) : 0
+    },
+    saveHighScore(score) {
+      localStorage.setItem('sharkByteHighScore', score.toString())
+    },
+    loadBGMVolume() {
+      const saved = localStorage.getItem('sharkByteBgmVolume')
+      return saved ? parseFloat(saved) : 0.8
+    },
+    saveBGMVolume(volume) {
+      localStorage.setItem('sharkByteBgmVolume', volume.toString())
+    },
+    loadSFXVolume() {
+      const saved = localStorage.getItem('sharkByteSfxVolume')
+      return saved ? parseFloat(saved) : 0.8
+    },
+    saveSFXVolume(volume) {
+      localStorage.setItem('sharkByteSfxVolume', volume.toString())
+    },
+  }
+
   // === 游戏配置 ===
   const CONFIG = {
     sharkSpeed: 0.4,
     boostSpeed: 1,
-    turnSpeed: 0.1, // 平滑速度
-    mouseSensitivity: 0.004, // 灵敏度 (桌面)
-    gyroSensitivity: 0.03, // 陀螺仪灵敏度 (移动)
+    turnSpeed: 0.2, // 平滑速度
+    mouseSensitivity: 0.003, // 灵敏度 (桌面)
+    joystickSensitivity: 0.02, // 灵敏度 (移动)
     cameraDistance: 15,
     rollFactor: 0.2, // 侧倾系数
     fogColor: 0x001020,
@@ -488,10 +637,10 @@
     staminaRecoverRate: 0.2, // 每帧恢复
     minStaminaToBoost: 1, // 最低冲刺需求
     recoverStamina: 40, // 咬断电缆恢复的耐力
-    enemyRemoveDistance: 200, // 敌人超过此距离后删除
-    enemySpeedAWS: 0.5, // AWS 敌人移动速度
-    enemySpeedAzure: 0.6, // Azure 敌人移动速度
-    enemySpeedGCP: 0.6, // GCP 敌人移动速度
+    enemyRemoveDistance: 150, // 敌人超过此距离后删除
+    enemySpeedAWS: 0.45, // AWS 敌人移动速度
+    enemySpeedAzure: 0.5, // Azure 敌人移动速度
+    enemySpeedGCP: 0.5, // GCP 敌人移动速度
     colors: {
       shark: 0x667788,
       cable: 0x00ffcc, // 霓虹蓝
@@ -508,6 +657,7 @@
     isPaused: false,
     cableCount: 3,
     score: 0,
+    highScore: Storage.loadHighScore(), // 从localStorage加载最高分
     cablesCut: 0, // 记录切断电缆数量
     health: CONFIG.maxHealth,
     stamina: CONFIG.maxStamina,
@@ -530,11 +680,14 @@
   let isLookingBack = false // 观察身后状态
   let clock = new THREE.Clock()
 
-  // 陀螺仪相关变量
-  let gyroInitialized = false
-  let initialAlpha = 0
-  let initialBeta = 0
-  let initialGamma = 0
+  // 移动端虚拟摇杆控制变量
+  let joystickActive = false
+  let joystickTouchId = null
+  let joystickStartX = 0
+  let joystickStartY = 0
+  let joystickDeltaX = 0
+  let joystickDeltaY = 0
+  const joystickMaxDistance = 35 // 摇杆最大移动距离
 
   // 帧率控制变量
   const fpsLimit = 60
@@ -546,7 +699,6 @@
   const uiHealth = document.getElementById('health-fill')
   const uiStamina = document.getElementById('stamina-fill')
   const uiMessage = document.getElementById('message-center')
-  const startBtn = document.getElementById('start-btn')
   const bgmSlider = document.getElementById('bgm-slider')
   const sfxSlider = document.getElementById('sfx-slider')
   const damageOverlay = document.getElementById('damage-overlay')
@@ -554,11 +706,87 @@
 
   // 暂停菜单元素
   const pauseMenu = document.getElementById('pause-menu')
-  const resumeBtn = document.getElementById('resume-btn')
-  const restartBtnPause = document.getElementById('restart-btn-pause')
-  const exitFullscreenBtn = document.getElementById('exit-fullscreen-btn')
   const bgmSliderPause = document.getElementById('bgm-slider-pause')
   const sfxSliderPause = document.getElementById('sfx-slider-pause')
+
+  // UI元素集合 - 统一管理
+  const gameUIElements = [
+    '.hud-top',
+    'indicators-container',
+    'pause-button-mobile',
+    'sprint-button',
+    'back-button',
+    'joystick-container',
+  ]
+
+  // 通用UI显示/隐藏函数
+  function toggleGameUI(show) {
+    gameUIElements.forEach(selector => {
+      const el = selector.startsWith('.') ? document.querySelector(selector) : document.getElementById(selector)
+      if (el) {
+        // 移动端专用控件只在移动设备上显示
+        const isMobileControl = ['pause-button-mobile', 'sprint-button', 'back-button', 'joystick-container'].includes(selector)
+
+        if (isMobileControl && !isMobile) {
+          el.style.display = 'none'
+        } else {
+          if (show) {
+            el.classList.remove('hide-game-ui')
+            // 恢复移动端控件的显示方式
+            if (isMobileControl && isMobile) {
+              if (selector === 'joystick-container') {
+                el.style.display = 'block'
+              } else {
+                el.style.display = 'flex'
+              }
+            }
+          } else {
+            el.classList.add('hide-game-ui')
+          }
+        }
+      }
+    })
+  }
+
+  // 同步音量滑块
+  function syncVolumeSliders(sourceBGM, sourceSFX) {
+    bgmSlider.value = sourceBGM
+    sfxSlider.value = sourceSFX
+    bgmSliderPause.value = sourceBGM
+    sfxSliderPause.value = sourceSFX
+  }
+
+  // 处理音量变化
+  function handleVolumeChange(type, value) {
+    if (type === 'bgm') {
+      soundManager.setBGMVolume(value)
+      Storage.saveBGMVolume(value)
+      bgmSlider.value = value
+      bgmSliderPause.value = value
+    } else {
+      soundManager.setSFXVolume(value)
+      Storage.saveSFXVolume(value)
+      sfxSlider.value = value
+      sfxSliderPause.value = value
+    }
+  }
+
+  // 通用全屏请求
+  async function requestFullscreenSafe() {
+    try {
+      await document.documentElement.requestFullscreen()
+    } catch (e) {
+      console.log('全屏请求被拒绝或不支持')
+    }
+  }
+
+  // 通用按钮事件绑定
+  function addButtonListener(id, callback) {
+    const btn = document.getElementById(id)
+    if (btn) {
+      btn.addEventListener(isMobile ? 'touchstart' : 'click', callback)
+    }
+  }
 
   // 初始化
   function init() {
@@ -601,13 +829,32 @@
     window.addEventListener('resize', onWindowResize, false)
 
     if (isMobile) {
-      // 移动端：使用触摸和陀螺仪
-      document.addEventListener('touchstart', onTouchStart)
-      document.addEventListener('touchend', onTouchEnd)
-      window.addEventListener('deviceorientation', onDeviceOrientation, false)
+      // 移动端：使用虚拟摇杆控制
+      const joystickContainer = document.getElementById('joystick-container')
+      joystickContainer.addEventListener('touchstart', onJoystickStart, { passive: false })
+      joystickContainer.addEventListener('touchmove', onJoystickMove, { passive: false })
+      joystickContainer.addEventListener('touchend', onJoystickEnd, { passive: false })
+
+      // 冲刺按钮事件
+      const sprintBtn = document.getElementById('sprint-button')
+      sprintBtn.addEventListener('touchstart', onSprintButtonDown, { passive: false })
+      sprintBtn.addEventListener('touchend', onSprintButtonUp, { passive: false })
+
+      // 暂停按钮事件（移动端）
+      const pauseBtn = document.getElementById('pause-button-mobile')
+      pauseBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        togglePause(true)
+      }, { passive: false })
+
+      // BACK按钮事件
+      const backBtn = document.getElementById('back-button')
+      backBtn.addEventListener('touchstart', onBackButtonDown, { passive: false })
+      backBtn.addEventListener('touchend', onBackButtonUp, { passive: false })
+
       // 更新UI提示
-      document.getElementById('control-instruction').innerHTML = '控制：倾斜设备瞄准，<br />按住屏幕冲刺/咬碎。'
-      document.getElementById('pause-control-instruction').innerHTML = '倾斜设备: 瞄准方向<br>按住屏幕: 冲刺 / 咬碎光缆'
+      document.getElementById('control-instruction').innerHTML = '控制：左下角摇杆移动视角，<br />右下角DASH按钮冲刺/咬碎，BACK按钮查看身后。'
     } else {
       // 桌面端：使用鼠标
       document.addEventListener('mousemove', onMouseMoveInfinite, false)
@@ -623,53 +870,63 @@
 
     document.addEventListener('contextmenu', (e) => e.preventDefault(), false)
 
-    startBtn.addEventListener(isMobile ? 'touchstart' : 'click', startGame)
-
-    bgmSlider.addEventListener('input', (e) => {
-      const volume = parseFloat(e.target.value)
-      soundManager.setBGMVolume(volume)
-      bgmSliderPause.value = e.target.value // 同步
+    // 监听屏幕大小变化（方向变化）
+    window.addEventListener('resize', () => {
+      if (isMobile && gameState.isPlaying && !gameState.isPaused) {
+        if (!checkOrientation()) {
+          togglePause(true)
+          window.confirm('请将设备旋转至横屏模式以继续游戏')
+        }
+      }
     })
 
-    sfxSlider.addEventListener('input', (e) => {
-      const volume = parseFloat(e.target.value)
-      soundManager.setSFXVolume(volume)
-      sfxSliderPause.value = e.target.value // 同步
+    addButtonListener('start-btn', () => {
+      setTimeout(startGame, 100)
     })
+    addButtonListener('restart-btn', startGame)
+    addButtonListener('exit-fullscreen-btn-gameover', () => {
+      if (document.fullscreenElement) document.exitFullscreen()
+    })
+
+    bgmSlider.addEventListener('input', (e) => handleVolumeChange('bgm', parseFloat(e.target.value)))
+    sfxSlider.addEventListener('input', (e) => handleVolumeChange('sfx', parseFloat(e.target.value)))
+    bgmSliderPause.addEventListener('input', (e) => handleVolumeChange('bgm', parseFloat(e.target.value)))
+    sfxSliderPause.addEventListener('input', (e) => handleVolumeChange('sfx', parseFloat(e.target.value)))
 
     document.addEventListener('keydown', (e) => {
-      if (e.code === 'KeyP') {
-        togglePause(true)
-      }
+      if (e.code === 'KeyP') togglePause(true)
     })
 
-    resumeBtn.addEventListener(isMobile ? 'touchstart' : 'click', () => togglePause(false))
-
-    restartBtnPause.addEventListener(isMobile ? 'touchstart' : 'click', () => {
+    addButtonListener('resume-btn', async () => {
+      if (isMobile && !checkOrientation()) {
+        window.confirm('请将设备旋转至横屏模式后再继续游戏')
+        return
+      }
+      await requestFullscreenSafe()
       togglePause(false)
-      startGame()
     })
 
-    exitFullscreenBtn.addEventListener(isMobile ? 'touchstart' : 'click', () => {
-      if (document.fullscreenElement) {
-        document.exitFullscreen()
-      }
+    addButtonListener('restart-btn-pause', () => {
+      togglePause(false)
+      setTimeout(startGame, 100)
     })
 
-    bgmSliderPause.addEventListener('input', (e) => {
-      soundManager.setBGMVolume(parseFloat(e.target.value))
-      bgmSlider.value = e.target.value // 与主菜单同步
-    })
-
-    sfxSliderPause.addEventListener('input', (e) => {
-      soundManager.setSFXVolume(parseFloat(e.target.value))
-      sfxSlider.value = e.target.value // 与主菜单同步
+    addButtonListener('exit-fullscreen-btn', () => {
+      if (document.fullscreenElement) document.exitFullscreen()
     })
 
     // 提前初始化音效管理器以启用音量控制
     soundManager.init()
-    soundManager.setBGMVolume(parseFloat(bgmSlider.value))
-    soundManager.setSFXVolume(parseFloat(sfxSlider.value))
+
+    // 从localStorage加载音量设置
+    const savedBGMVolume = Storage.loadBGMVolume()
+    const savedSFXVolume = Storage.loadSFXVolume()
+    syncVolumeSliders(savedBGMVolume, savedSFXVolume)
+    soundManager.setBGMVolume(savedBGMVolume)
+    soundManager.setSFXVolume(savedSFXVolume)
+
+    // 初始化最高分显示
+    updateHUD()
 
     // 开始循环
     animate()
@@ -828,7 +1085,7 @@
 
   // === 爆炸特效 ===
   function createExplosion(position) {
-    const particleCount = 50
+    const particleCount = 100
     const geometry = new THREE.BufferGeometry()
     const positions = []
     const velocities = []
@@ -856,7 +1113,7 @@
       mesh: explosionMesh,
       velocities: velocities,
       age: 0,
-      maxAge: 60, // 持续帧数
+      maxAge: 180, // 持续帧数
     })
   }
 
@@ -960,77 +1217,147 @@
     })
   }
 
-  // === 陀螺仪权限请求 ===
-  async function requestGyroPermission() {
-    if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-      try {
-        const permission = await DeviceOrientationEvent.requestPermission()
-        if (permission === 'granted') {
-          console.log('陀螺仪权限已授予')
-          return true
-        } else {
-          console.warn('陀螺仪权限被拒绝')
-          return false
-        }
-      } catch (error) {
-        console.error('请求陀螺仪权限失败:', error)
-        return false
-      }
+  // === 虚拟摇杆输入处理 ===
+  function getTouchById(touchList, id) {
+    for (let i = 0; i < touchList.length; i++) {
+      if (touchList[i].identifier === id) return touchList[i]
     }
-    return true
+    return null
   }
 
-  // === 陀螺仪输入处理 ===
-  function onDeviceOrientation(event) {
+  function onJoystickStart(event) {
     if (!gameState.isPlaying || gameState.isPaused) return
 
-    const alpha = event.alpha || 0  // Z轴 (0-360)
-    const beta = event.beta || 0    // X轴 (-180 to 180)
-    const gamma = event.gamma || 0  // Y轴 (-90 to 90)
+    event.preventDefault()
+    event.stopPropagation()
 
-    // 初始化基准值
-    if (!gyroInitialized) {
-      initialAlpha = alpha
-      initialBeta = beta
-      initialGamma = gamma
-      gyroInitialized = true
-      return
-    }
+    const touch = (event.changedTouches && event.changedTouches[0]) ? event.changedTouches[0] : event.touches[0]
+    const rect = event.currentTarget.getBoundingClientRect()
+    joystickTouchId = touch.identifier
 
-    // 计算相对旋转
-    let deltaBeta = beta - initialBeta
-    let deltaGamma = gamma - initialGamma
+    // 将触摸起始点设置为容器的中心点,而不是触摸位置
+    joystickStartX = rect.left + rect.width / 2
+    joystickStartY = rect.top + rect.height / 2
+    joystickActive = true
 
-    // 处理alpha的360度跳变
+    const joystickStick = document.getElementById('joystick-stick')
+    joystickStick.classList.add('active')
 
-    // 横屏模式下的映射：
-    // gamma (设备左右倾斜) -> 控制偏航 (Y轴旋转)
-    // beta (设备前后倾斜) -> 控制俯仰 (X轴旋转)
-
-    sharkEuler.y = -deltaGamma * CONFIG.gyroSensitivity
-    sharkEuler.x = (deltaBeta - 45) * CONFIG.gyroSensitivity * 0.5 // 调整基准角度
-
-    // 限制俯仰角
-    sharkEuler.x = Math.max(-1.4, Math.min(1.4, sharkEuler.x))
+    // 立即更新摇杆位置,确保从正确的起始位置开始
+    updateJoystickPosition(touch.clientX, touch.clientY)
   }
 
-  // === 触摸输入处理 ===
-  function onTouchStart(event) {
-    if (!gameState.isPlaying) return
-    if (gameState.isPaused) return
+  function onJoystickMove(event) {
+    if (!gameState.isPlaying || gameState.isPaused || !joystickActive) return
 
     event.preventDefault()
+    event.stopPropagation()
 
-    // 触摸开始冲刺
+    let touch = getTouchById(event.touches, joystickTouchId)
+    if (!touch && event.changedTouches) {
+      touch = getTouchById(event.changedTouches, joystickTouchId)
+    }
+    if (!touch) return
+
+    updateJoystickPosition(touch.clientX, touch.clientY)
+  }
+
+  function onJoystickEnd(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    // 仅在当前跟踪的触点结束时才重置摇杆
+    let ended = false
+    if (event.changedTouches) {
+      for (let i = 0; i < event.changedTouches.length; i++) {
+        if (event.changedTouches[i].identifier === joystickTouchId) {
+          ended = true
+          break
+        }
+      }
+    }
+    if (!ended) return
+
+    joystickActive = false
+    joystickTouchId = null
+    joystickDeltaX = 0
+    joystickDeltaY = 0
+
+    // 重置摇杆起始位置,确保下次触摸时从正确位置开始
+    joystickStartX = 0
+    joystickStartY = 0
+
+    const joystickStick = document.getElementById('joystick-stick')
+    joystickStick.classList.remove('active')
+    joystickStick.style.transform = 'translate(-50%, -50%)'
+  }
+
+  function updateJoystickPosition(touchX, touchY) {
+    let deltaX = touchX - joystickStartX
+    let deltaY = touchY - joystickStartY
+
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    const normalizedDistance = Math.min(distance / joystickMaxDistance, 1.0) // 归一化距离 0-1
+
+    if (distance > joystickMaxDistance) {
+      const angle = Math.atan2(deltaY, deltaX)
+      deltaX = Math.cos(angle) * joystickMaxDistance
+      deltaY = Math.sin(angle) * joystickMaxDistance
+    }
+
+    // 保存归一化的方向和距离，用于速度控制
+    const direction = distance > 0 ? 1 : 0
+    joystickDeltaX = (deltaX / joystickMaxDistance) * normalizedDistance * direction
+    joystickDeltaY = (deltaY / joystickMaxDistance) * normalizedDistance * direction
+
+    const joystickStick = document.getElementById('joystick-stick')
+    joystickStick.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px))`
+  }
+
+  // === 冲刺按钮事件处理 ===
+  function onSprintButtonDown(event) {
+    if (!gameState.isPlaying || gameState.isPaused) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const sprintBtn = document.getElementById('sprint-button')
+
     if (gameState.stamina >= CONFIG.minStaminaToBoost) {
       isBoosting = true
+      sprintBtn.classList.add('active')
       soundManager.playBoost()
     }
   }
 
-  function onTouchEnd(event) {
+  function onSprintButtonUp(event) {
     event.preventDefault()
+    event.stopPropagation()
+
+    const sprintBtn = document.getElementById('sprint-button')
     isBoosting = false
+    sprintBtn.classList.remove('active')
+  }
+
+  // === BACK按钮事件处理 ===
+  function onBackButtonDown(event) {
+    if (!gameState.isPlaying || gameState.isPaused) return
+
+    event.preventDefault()
+    event.stopPropagation()
+
+    const backBtn = document.getElementById('back-button')
+    isLookingBack = true
+    backBtn.classList.add('active')
+  }
+
+  function onBackButtonUp(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    const backBtn = document.getElementById('back-button')
+    isLookingBack = false
+    backBtn.classList.remove('active')
   }
 
   // === 输入处理（鼠标控制）===
@@ -1078,23 +1405,19 @@
   }
 
   function togglePause(pause) {
-    if (!gameState.isPlaying) return // 如果没有游戏则无法暂停
+    if (!gameState.isPlaying) return
 
     gameState.isPaused = pause
 
     if (gameState.isPaused) {
       pauseMenu.style.display = 'flex'
-      if (!isMobile) {
-        document.exitPointerLock()
-      }
-      // 打开暂停菜单时同步滑块
-      bgmSliderPause.value = bgmSlider.value
-      sfxSliderPause.value = sfxSlider.value
+      if (!isMobile) document.exitPointerLock()
+      syncVolumeSliders(bgmSlider.value, sfxSlider.value)
+      toggleGameUI(false)
     } else {
       pauseMenu.style.display = 'none'
-      if (!isMobile) {
-        document.body.requestPointerLock()
-      }
+      if (!isMobile) document.body.requestPointerLock()
+      toggleGameUI(true)
     }
   }
 
@@ -1104,44 +1427,18 @@
     renderer.setSize(window.innerWidth, window.innerHeight)
   }
 
-  // === 横屏检测 ===
-  function isLandscape() {
-    return window.innerWidth > window.innerHeight
-  }
-
   // === 游戏逻辑 ===
   async function startGame() {
     // 移动端处理
     if (isMobile) {
-      // 检测横屏
-      if (!isLandscape()) {
-        window.confirm('请将设备横置后开始游戏！')
+      await requestFullscreenSafe()
+      if (!checkOrientation()) {
+        window.confirm('为了获得最佳游戏体验，请将设备旋转至横屏模式')
         return
-      }
-      // 请求陀螺仪权限
-      const gyroPermission = await requestGyroPermission()
-      console.log(gyroPermission)
-      if (!gyroPermission) {
-        window.confirm('陀螺仪不可用，无法开始游戏！')
-        return
-      }
-      // 重置陀螺仪状态
-      gyroInitialized = false
-      // 尝试全屏
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen()
-        console.log('全屏成功')
       }
     } else {
       // 桌面端处理
-      try {
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen()
-        }
-      } catch (e) {
-        console.log('全屏请求被拒绝或不支持')
-      }
-
+      await requestFullscreenSafe()
       document.body.requestPointerLock().catch((err) => {console.error(err)})
     }
 
@@ -1156,8 +1453,9 @@
     gameState.stamina = 100
     uiMessage.style.display = 'none'
 
+    document.getElementById('game-over-screen').style.display = 'none'
+
     sharkContainer.position.set(0, 0, 0)
-    // 重置旋转使用四元数
     sharkContainer.quaternion.identity()
     sharkEuler = { x: 0, y: 0 }
 
@@ -1167,13 +1465,11 @@
     })
     enemies = []
 
-    // 清理现有光缆指示器
     cables.forEach((c) => {
       if (c.indicatorEl) c.indicatorEl.remove()
     })
-
-    // 初始生成电缆
     generateCables()
+    toggleGameUI(true)
     updateHUD()
   }
 
@@ -1181,12 +1477,27 @@
     soundManager.playGameOver()
     gameState.isPlaying = false
     document.exitPointerLock()
-    uiMessage.style.display = 'block'
-    document.querySelector('#message-center h1').innerText = '连接断开'
-    document.querySelector(
-      '#message-center p',
-    ).innerHTML = `任务失败。<br>你切断了 ${gameState.score} TB 的数据。`
-    startBtn.innerText = '重新连接'
+
+    // 检查并更新最高分
+    let isNewRecord = false
+    if (gameState.score > gameState.highScore) {
+      gameState.highScore = gameState.score
+      Storage.saveHighScore(gameState.highScore)
+      isNewRecord = true
+    }
+
+    // 显示游戏结束界面
+    document.getElementById('game-over-screen').style.display = 'flex'
+    document.getElementById('final-score').innerText = String(gameState.score)
+    document.getElementById('high-score-game-over').innerText = String(gameState.highScore)
+
+    // 显示/隐藏新纪录提示
+    document.getElementById('new-record-message').style.display = isNewRecord ? 'block' : 'none'
+
+    // 隐藏开始界面
+    uiMessage.style.display = 'none'
+
+    toggleGameUI(false)
   }
 
   function takeDamage(amount) {
@@ -1207,6 +1518,53 @@
     uiScore.innerText = `断网进度: ${gameState.score} TB`
     uiHealth.style.width = `${gameState.health}%`
     uiStamina.style.width = `${gameState.stamina}%`
+
+    // 更新最高分显示
+    const highScoreDisplay = document.getElementById('high-score-display')
+    if (highScoreDisplay) {
+      highScoreDisplay.innerText = `最高分: ${gameState.highScore} TB`
+    }
+    const highScoreStartValue = document.getElementById('high-score-start-value')
+    if (highScoreStartValue) {
+      highScoreStartValue.innerText = String(gameState.highScore)
+    }
+  }
+
+  // 计算指示器屏幕位置的辅助函数
+  function calculateIndicatorPosition(pos, screenThreshold, widthHalf, heightHalf) {
+    const isBehind = pos.z > 1
+    const isOnScreen = pos.x > -screenThreshold && pos.x < screenThreshold &&
+      pos.y > -screenThreshold && pos.y < screenThreshold && !isBehind
+
+    if (isOnScreen) return null
+
+    let tx = pos.x
+    let ty = pos.y
+
+    if (isBehind) {
+      tx = -tx
+      ty = -ty
+    }
+
+    const angle = Math.atan2(ty, tx)
+    const absX = Math.abs(tx)
+    const absY = Math.abs(ty)
+
+    if (absX > absY) {
+      const scale = screenThreshold / absX
+      tx = (tx > 0 ? 1 : -1) * screenThreshold
+      ty = ty * scale
+    } else {
+      const scale = screenThreshold / absY
+      ty = (ty > 0 ? 1 : -1) * screenThreshold
+      tx = tx * scale
+    }
+
+    const screenX = tx * widthHalf + widthHalf
+    const screenY = -(ty * heightHalf) + heightHalf
+    const deg = (angle * 180) / Math.PI - 90
+
+    return { screenX, screenY, deg }
   }
 
   function updateIndicators() {
@@ -1222,46 +1580,15 @@
       const pos = enemy.group.position.clone()
       pos.project(camera)
 
-      const isBehind = pos.z > 1
-      const isOnScreen = pos.x > -0.9 && pos.x < 0.9 && pos.y > -0.9 && pos.y < 0.9 && !isBehind
+      const result = calculateIndicatorPosition(pos, 0.9, widthHalf, heightHalf)
 
-      if (isOnScreen) {
+      if (!result) {
         enemy.indicatorEl.style.display = 'none'
       } else {
         enemy.indicatorEl.style.display = 'block'
-
-        let tx = pos.x
-        let ty = pos.y
-
-        if (isBehind) {
-          tx = -tx
-          ty = -ty
-        }
-
-        const angle = Math.atan2(ty, tx)
-        const absX = Math.abs(tx)
-        const absY = Math.abs(ty)
-
-        let screenX, screenY
-
-        if (absX > absY) {
-          const scale = 0.9 / absX
-          tx = (tx > 0 ? 1 : -1) * 0.9
-          ty = ty * scale
-        } else {
-          const scale = 0.9 / absY
-          ty = (ty > 0 ? 1 : -1) * 0.9
-          tx = tx * scale
-        }
-
-        screenX = tx * widthHalf + widthHalf
-        screenY = -(ty * heightHalf) + heightHalf
-
-        enemy.indicatorEl.style.left = `${screenX}px`
-        enemy.indicatorEl.style.top = `${screenY}px`
-
-        const deg = (angle * 180) / Math.PI - 90
-        enemy.indicatorEl.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`
+        enemy.indicatorEl.style.left = `${result.screenX}px`
+        enemy.indicatorEl.style.top = `${result.screenY}px`
+        enemy.indicatorEl.style.transform = `translate(-50%, -50%) rotate(${-result.deg}deg)`
       }
     })
 
@@ -1269,50 +1596,18 @@
     cables.forEach((cable) => {
       if (!cable.indicatorEl || !cable.active) return
 
-      // 使用光缆的第一个点作为指示器目标位置
       const cablePos = cable.points[0].clone()
       cablePos.project(camera)
 
-      const isBehind = cablePos.z > 1
-      const isOnScreen = cablePos.x > -0.8 && cablePos.x < 0.8 && cablePos.y > -0.8 && cablePos.y < 0.8 && !isBehind
+      const result = calculateIndicatorPosition(cablePos, 0.85, widthHalf, heightHalf)
 
-      if (isOnScreen) {
+      if (!result) {
         cable.indicatorEl.style.display = 'none'
       } else {
         cable.indicatorEl.style.display = 'block'
-
-        let tx = cablePos.x
-        let ty = cablePos.y
-
-        if (isBehind) {
-          tx = -tx
-          ty = -ty
-        }
-
-        const angle = Math.atan2(ty, tx)
-        const absX = Math.abs(tx)
-        const absY = Math.abs(ty)
-
-        let screenX, screenY
-
-        if (absX > absY) {
-          const scale = 0.85 / absX
-          tx = (tx > 0 ? 1 : -1) * 0.85
-          ty = ty * scale
-        } else {
-          const scale = 0.85 / absY
-          ty = (ty > 0 ? 1 : -1) * 0.85
-          tx = tx * scale
-        }
-
-        screenX = tx * widthHalf + widthHalf
-        screenY = -(ty * heightHalf) + heightHalf
-
-        cable.indicatorEl.style.left = `${screenX}px`
-        cable.indicatorEl.style.top = `${screenY}px`
-
-        const deg = (angle * 180) / Math.PI - 90
-        cable.indicatorEl.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`
+        cable.indicatorEl.style.left = `${result.screenX}px`
+        cable.indicatorEl.style.top = `${result.screenY}px`
+        cable.indicatorEl.style.transform = `translate(-50%, -50%) rotate(${-result.deg}deg)`
       }
     })
   }
@@ -1330,9 +1625,9 @@
 
     if (!gameState.isPlaying) {
       scene.rotation.y = 0
-      // 侧前方视角：X=28（右侧），Y=-20（上方），Z=-24（前方，鲨鱼面向-Z）
-      camera.position.set(28, -20, -24)
-      camera.lookAt(0, 0, 0)
+      // 侧前方视角：X=18（右侧），Y=-20（上方），Z=-12（前方，鲨鱼面向-Z）
+      camera.position.set(10, 3, -6)
+      camera.lookAt(0, -2, -2)
       renderer.render(scene, camera)
       return
     } else {
@@ -1344,7 +1639,16 @@
     }
 
     // 1. 鲨鱼运动逻辑（更新）
-    // 注意：陀螺仪在 onDeviceOrientation 中已更新 sharkEuler
+    // 移动端使用虚拟摇杆更新视角
+    if (isMobile && joystickActive) {
+      // 应用距离加权的旋转速度
+      sharkEuler.y -= joystickDeltaX * CONFIG.joystickSensitivity
+      sharkEuler.x -= joystickDeltaY * CONFIG.joystickSensitivity
+
+      // 限制俯仰角
+      sharkEuler.x = Math.max(-1.4, Math.min(1.4, sharkEuler.x))
+    }
+
     const targetPitch = sharkEuler.x
     const targetYaw = sharkEuler.y
 
@@ -1379,6 +1683,9 @@
       if (gameState.stamina <= 0) {
         gameState.stamina = 0
         isBoosting = false // 耐力耗尽时停止冲刺
+        if (isMobile) {
+          document.getElementById('sprint-button').classList.remove('active')
+        }
       }
       updateHUD() // 实时更新耐力条
     } else if (!isBoosting && gameState.stamina < CONFIG.maxStamina) {
@@ -1392,6 +1699,19 @@
     // 如果耐力不足，强制停止冲刺
     if (isBoosting && gameState.stamina < CONFIG.minStaminaToBoost) {
       isBoosting = false
+      if (isMobile) {
+        document.getElementById('sprint-button').classList.remove('active')
+      }
+    }
+
+    // 更新冲刺按钮状态（移动端）
+    if (isMobile) {
+      const sprintBtn = document.getElementById('sprint-button')
+      if (gameState.stamina < CONFIG.minStaminaToBoost) {
+        sprintBtn.classList.add('disabled')
+      } else {
+        sprintBtn.classList.remove('disabled')
+      }
     }
 
     // 始终向前移动（沿自身的 Z 轴）
@@ -1604,7 +1924,7 @@
         if (this.ctx.state === 'suspended') {
           this.ctx.resume()
         }
-        this.bgmAudio.play().catch((e) => console.log('BGM play failed (likely autoplay policy):', e))
+        this.bgmAudio.play().catch((e) => console.error(e))
       }
     }
 
@@ -1638,52 +1958,26 @@
       osc.stop(this.ctx.currentTime + startTime + duration)
     }
 
+    createOscillator(type, freqStart, freqEnd, gainStart, duration) {
+      const now = this.ctx.currentTime
+      const osc = this.ctx.createOscillator()
+      const gain = this.ctx.createGain()
+      osc.type = type
+      osc.frequency.setValueAtTime(freqStart, now)
+      osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration)
+      gain.gain.setValueAtTime(gainStart, now)
+      gain.gain.exponentialRampToValueAtTime(0.01, now + duration)
+      osc.connect(gain)
+      gain.connect(this.sfxGain)
+      osc.start(now)
+      osc.stop(now + duration)
+    }
+
     playBoost() {
       if (!this.ctx) return
-
-      const now = this.ctx.currentTime
-      const duration = 0.4
-
-      // 主低频冲击音（提供力量感）
-      const bassOsc = this.ctx.createOscillator()
-      const bassGain = this.ctx.createGain()
-      bassOsc.type = 'sawtooth'
-      bassOsc.frequency.setValueAtTime(60, now)
-      bassOsc.frequency.exponentialRampToValueAtTime(30, now + duration)
-      bassGain.gain.setValueAtTime(0.5, now)
-      bassGain.gain.exponentialRampToValueAtTime(0.01, now + duration)
-      bassOsc.connect(bassGain)
-      bassGain.connect(this.sfxGain)
-
-      // 中频增强清晰度
-      const midOsc = this.ctx.createOscillator()
-      const midGain = this.ctx.createGain()
-      midOsc.type = 'square'
-      midOsc.frequency.setValueAtTime(300, now)
-      midOsc.frequency.exponentialRampToValueAtTime(150, now + 0.15)
-      midGain.gain.setValueAtTime(0.2, now)
-      midGain.gain.exponentialRampToValueAtTime(0.01, now + 0.2)
-      midOsc.connect(midGain)
-      midGain.connect(this.sfxGain)
-
-      // 高频冲击音（增强清晰度和攻击性）
-      const highOsc = this.ctx.createOscillator()
-      const highGain = this.ctx.createGain()
-      highOsc.type = 'triangle'
-      highOsc.frequency.setValueAtTime(800, now)
-      highOsc.frequency.exponentialRampToValueAtTime(400, now + 0.1)
-      highGain.gain.setValueAtTime(0.2, now)
-      highGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1)
-      highOsc.connect(highGain)
-      highGain.connect(this.sfxGain)
-
-      // 启动所有振荡器
-      bassOsc.start(now)
-      bassOsc.stop(now + duration)
-      midOsc.start(now)
-      midOsc.stop(now + 0.2)
-      highOsc.start(now)
-      highOsc.stop(now + 0.1)
+      this.createOscillator('sawtooth', 60, 30, 0.5, 0.4)
+      this.createOscillator('square', 300, 150, 0.2, 0.2)
+      this.createOscillator('triangle', 800, 400, 0.2, 0.1)
     }
 
     playCut() {
