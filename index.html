@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Shark Byte</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background-color: #000510;
+        font-family: 'Courier New', Courier, monospace;
+        color: #00ffcc;
+        user-select: none;
+      }
+      #game-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+      }
+      #ui-layer {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 2;
+        pointer-events: none; /* 让鼠标事件穿透到 Canvas */
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 20px;
+        box-sizing: border-box;
+        text-shadow: 0 0 10px #00ffcc;
+      }
+      #indicators-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1; /* 在 UI 下层，但在游戏上层 */
+        overflow: hidden;
+      }
+      .indicator {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 20px solid #00ffcc;
+        filter: drop-shadow(0 0 5px #00ffcc);
+        transform-origin: center center;
+        display: none; /* 默认隐藏 */
+      }
+      .indicator::after {
+        content: 'SIGNAL';
+        position: absolute;
+        top: 20px;
+        left: -15px;
+        font-size: 10px;
+        color: #00ffcc;
+        font-weight: bold;
+      }
+      .hud-top {
+        display: flex;
+        justify-content: space-between;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      .health-bar-container {
+        width: 300px;
+        height: 20px;
+        border: 2px solid #ff3333;
+        background: rgba(0, 0, 0, 0.5);
+      }
+      #health-fill {
+        width: 100%;
+        height: 100%;
+        background-color: #ff3333;
+        box-shadow: 0 0 10px #ff3333;
+        transition: width 0.2s;
+      }
+      #score-display {
+        color: #ccff00;
+        text-shadow: 0 0 10px #ccff00;
+      }
+      #message-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        pointer-events: auto; /* 允许点击按钮 */
+      }
+      h1 {
+        font-size: 60px;
+        margin: 0 0 20px 0;
+        background: linear-gradient(to bottom, #00ffcc, #0055aa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 0 10px rgba(0, 255, 204, 0.5));
+      }
+      p {
+        font-size: 18px;
+        color: #aaa;
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 10px;
+        border-radius: 5px;
+      }
+      button {
+        background: transparent;
+        border: 2px solid #00ffcc;
+        color: #00ffcc;
+        padding: 15px 40px;
+        font-size: 24px;
+        font-family: inherit;
+        cursor: pointer;
+        text-transform: uppercase;
+        transition: all 0.3s;
+        box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+      }
+      button:hover {
+        background: #00ffcc;
+        color: #000;
+        box-shadow: 0 0 30px rgba(0, 255, 204, 0.8);
+      }
+      #damage-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.1s;
+        z-index: 3;
+      }
+      .key {
+        display: inline-block;
+        border: 1px solid #fff;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        margin: 0 2px;
+      }
+      .settings-panel {
+        margin-top: 20px;
+        background: rgba(0, 20, 40, 0.8);
+        padding: 15px;
+        border: 1px solid #00ffcc;
+        border-radius: 8px;
+        text-align: left;
+        width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .setting-item {
+        margin-bottom: 10px;
+      }
+      .setting-item label {
+        display: block;
+        margin-bottom: 5px;
+        color: #00ffcc;
+        font-size: 16px;
+      }
+      .setting-item input[type='range'] {
+        width: 100%;
+        accent-color: #00ffcc;
+        cursor: pointer;
+      }
+      /* Pause Menu Styles */
+      #pause-menu {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 5, 16, 0.85);
+        backdrop-filter: blur(10px);
+        z-index: 10;
+        display: none; /* Hidden by default */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        pointer-events: auto;
+      }
+
+      #pause-menu h2 {
+        font-size: 48px;
+        color: #00ffcc;
+        margin-bottom: 30px;
+        text-shadow: 0 0 15px #00ffcc;
+        letter-spacing: 5px;
+      }
+
+      .pause-content {
+        display: flex;
+        gap: 40px;
+        align-items: flex-start;
+      }
+
+      .pause-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 250px;
+      }
+
+      .pause-info {
+        width: 300px;
+        text-align: left;
+        background: rgba(0, 20, 40, 0.6);
+        padding: 20px;
+        border: 1px solid #00ffcc;
+        border-radius: 8px;
+        color: #ddd;
+      }
+
+      .pause-info h3 {
+        color: #00ffcc;
+        margin-top: 0;
+        border-bottom: 1px solid #00ffcc;
+        padding-bottom: 5px;
+      }
+
+      .pause-info p {
+        font-size: 14px;
+        background: none;
+        padding: 0;
+        margin-bottom: 10px;
+        color: #ccc;
+      }
+
+      .pause-settings {
+        margin-top: 20px;
+        border-top: 1px solid #334455;
+        padding-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="game-container"></div>
+    <div id="damage-overlay"></div>
+
+    <!-- 独立的指示器容器 -->
+    <div id="indicators-container"></div>
+
+    <div id="ui-layer">
+      <div class="hud-top">
+        <div id="score-display">断网进度: 0 TB</div>
+        <div>
+          HP:
+          <div class="health-bar-container">
+            <div id="health-fill"></div>
+          </div>
+        </div>
+      </div>
+
+      <div id="message-center">
+        <h1>Shark Byte</h1>
+        <p>
+          任务：摧毁海底光缆。<br />
+          控制：鼠标移动瞄准，<br />
+          <span class="key">左键</span> 冲刺/咬碎，<span class="key">右键</span> 后视镜。<span class="key">P</span>
+          暂停。<br />
+          警告：检测到云服务防御系统 (AWS, Azure, GCP)。
+        </p>
+        <button id="start-btn">开始潜入</button>
+
+        <div class="settings-panel">
+          <div class="setting-item">
+            <label for="bgm-slider">BGM Volume</label>
+            <input type="range" id="bgm-slider" min="0" max="1" step="0.01" value="0.3" />
+          </div>
+          <div class="setting-item">
+            <label for="sfx-slider">SFX Volume</label>
+            <input type="range" id="sfx-slider" min="0" max="1" step="0.01" value="0.5" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="pause-menu">
+      <h2>PAUSED</h2>
+      <div class="pause-content">
+        <div class="pause-buttons">
+          <button id="resume-btn">继续游戏</button>
+          <button id="restart-btn-pause">重新开始</button>
+          <button id="exit-fullscreen-btn">退出全屏</button>
+        </div>
+        <div class="pause-info">
+          <h3>操作说明</h3>
+          <p>移动鼠标: 瞄准方向</p>
+          <p><span class="key">左键</span>: 冲刺 / 咬碎光缆</p>
+          <p><span class="key">右键</span>: 后视镜</p>
+          <p><span class="key">P</span>: 暂停</p>
+
+          <h3>游戏规则</h3>
+          <p>摧毁海底光缆以切断网络连接。</p>
+          <p>躲避或摧毁云服务防御无人机。</p>
+
+          <div class="pause-settings">
+            <div class="setting-item">
+              <label for="bgm-slider-pause">BGM Volume</label>
+              <input type="range" id="bgm-slider-pause" min="0" max="1" step="0.01" value="0.3" />
+            </div>
+            <div class="setting-item">
+              <label for="sfx-slider-pause">SFX Volume</label>
+              <input type="range" id="sfx-slider-pause" min="0" max="1" step="0.01" value="0.5" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Three.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <script>
+      // === 游戏配置 ===
+      const CONFIG = {
+        sharkSpeed: 0.5,
+        boostSpeed: 1.5,
+        turnSpeed: 0.1, // 平滑速度
+        mouseSensitivity: 0.003, // 灵敏度
+        cameraDistance: 15,
+        cableCount: 6,
+        rollFactor: 0.5, // 侧倾系数
+        fogColor: 0x001020,
+        colors: {
+          shark: 0x667788,
+          cable: 0x00ffcc, // 霓虹蓝
+          cableCore: 0xffffff,
+          aws: 0xff9900, // 橙色
+          azure: 0x007fff, // 蓝色
+          gcp: 0xea4335, // 红色
+        },
+      }
+
+      // === 状态变量 ===
+      let gameState = {
+        isPlaying: false,
+        isPaused: false,
+        score: 0,
+        cablesCut: 0, // 记录切断电缆数量
+        health: 100,
+        time: 0,
+      }
+
+      // === Three.js 全局变量 ===
+      let scene, camera, renderer
+      let sharkContainer, sharkMesh, sharkJaw
+      let mouse = new THREE.Vector2()
+
+      // 用于累积旋转的角度变量
+      let sharkEuler = { x: 0, y: 0 }
+
+      let targetRotation = new THREE.Quaternion() // 用于 Slerp 的目标四元数
+      let cables = []
+      let enemies = []
+      let particles = []
+      let explosions = [] // 爆炸特效数组
+      let isBoosting = false
+      let isLookingBack = false // 观察身后状态
+      let clock = new THREE.Clock()
+
+      // FPS 控制变量
+      const fpsLimit = 60
+      const fpsInterval = 1000 / fpsLimit
+      let lastFrameTime = performance.now()
+
+      // UI 元素
+      const uiScore = document.getElementById('score-display')
+      const uiHealth = document.getElementById('health-fill')
+      const uiMessage = document.getElementById('message-center')
+      const startBtn = document.getElementById('start-btn')
+      const bgmSlider = document.getElementById('bgm-slider')
+      const sfxSlider = document.getElementById('sfx-slider')
+      const damageOverlay = document.getElementById('damage-overlay')
+      const indicatorsContainer = document.getElementById('indicators-container')
+
+      // Pause Menu Elements
+      const pauseMenu = document.getElementById('pause-menu')
+      const resumeBtn = document.getElementById('resume-btn')
+      const restartBtnPause = document.getElementById('restart-btn-pause')
+      const exitFullscreenBtn = document.getElementById('exit-fullscreen-btn')
+      const bgmSliderPause = document.getElementById('bgm-slider-pause')
+      const sfxSliderPause = document.getElementById('sfx-slider-pause')
+
+      // 初始化
+      function init() {
+        // 场景
+        scene = new THREE.Scene()
+        scene.fog = new THREE.FogExp2(CONFIG.fogColor, 0.01)
+        scene.background = new THREE.Color(CONFIG.fogColor)
+
+        // 摄像机
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200)
+
+        // 渲染器
+        renderer = new THREE.WebGLRenderer({ antialias: true })
+        renderer.setSize(window.innerWidth, window.innerHeight)
+        renderer.shadowMap.enabled = true
+        document.getElementById('game-container').appendChild(renderer.domElement)
+
+        // 灯光
+        const ambientLight = new THREE.AmbientLight(0x404040, 2) // 环境光
+        scene.add(ambientLight)
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8)
+        dirLight.position.set(10, 50, 20)
+        dirLight.castShadow = true
+        scene.add(dirLight)
+
+        // 聚光灯 (模拟鲨鱼头灯/海底光线)
+        const spotLight = new THREE.SpotLight(0x00ffff, 1)
+        spotLight.position.set(0, 10, 0)
+        spotLight.angle = Math.PI / 4
+        spotLight.penumbra = 0.1
+        scene.add(spotLight)
+
+        // 创建游戏对象
+        createEnvironment()
+        createShark()
+        generateCables()
+
+        // 事件监听
+        window.addEventListener('resize', onWindowResize, false)
+        document.addEventListener('mousemove', onMouseMoveInfinite, false)
+        document.addEventListener('mousedown', onMouseDown, false)
+        document.addEventListener('mouseup', onMouseUp, false)
+        document.addEventListener('contextmenu', (e) => e.preventDefault(), false)
+
+        // 监听指针锁定状态变化
+        document.addEventListener('pointerlockchange', () => {
+          if (document.pointerLockElement !== document.body && gameState.isPlaying) {
+            togglePause(true)
+          }
+        })
+
+        startBtn.addEventListener('click', startGame)
+
+        bgmSlider.addEventListener('input', (e) => {
+          soundManager.setBGMVolume(parseFloat(e.target.value))
+        })
+
+        sfxSlider.addEventListener('input', (e) => {
+          soundManager.setSFXVolume(parseFloat(e.target.value))
+          sfxSliderPause.value = e.target.value // Sync
+        })
+
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'KeyP') {
+            togglePause(true)
+          }
+        })
+
+        resumeBtn.addEventListener('click', () => togglePause(false))
+
+        restartBtnPause.addEventListener('click', () => {
+          togglePause(false)
+          startGame()
+        })
+
+        exitFullscreenBtn.addEventListener('click', () => {
+          if (document.fullscreenElement) {
+            document.exitFullscreen()
+          }
+        })
+
+        bgmSliderPause.addEventListener('input', (e) => {
+          soundManager.setBGMVolume(parseFloat(e.target.value))
+          bgmSlider.value = e.target.value // Sync with main menu
+        })
+
+        sfxSliderPause.addEventListener('input', (e) => {
+          soundManager.setSFXVolume(parseFloat(e.target.value))
+          sfxSlider.value = e.target.value // Sync with main menu
+        })
+
+        // 开始循环
+        animate()
+      }
+
+      // === 核心逻辑：创建鲨鱼 (Low Poly Style) ===
+      function createShark() {
+        sharkContainer = new THREE.Group()
+        scene.add(sharkContainer)
+
+        // 身体
+        const bodyGeo = new THREE.ConeGeometry(1, 4, 8)
+        bodyGeo.rotateX(Math.PI / 2) // 让圆锥躺下，指向 Z 轴 (Three.js 默认朝向)
+        const bodyMat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.shark, flatShading: true })
+        sharkMesh = new THREE.Mesh(bodyGeo, bodyMat)
+        sharkMesh.castShadow = true
+        sharkContainer.add(sharkMesh)
+
+        // 尾巴
+        const tailGeo = new THREE.BoxGeometry(0.1, 1.3, 1.2)
+        tailGeo.translate(0, 0, 2.2)
+        const tail = new THREE.Mesh(tailGeo, bodyMat)
+        sharkMesh.add(tail)
+
+        // 鳍
+        const finGeo = new THREE.BufferGeometry()
+        const finVertices = new Float32Array([0, 0.5, -0.5, 0, 0.5, 0.5, 0, 2.0, 0.5])
+        finGeo.setAttribute('position', new THREE.BufferAttribute(finVertices, 3))
+        finGeo.computeVertexNormals()
+        const fin = new THREE.Mesh(finGeo, bodyMat)
+        fin.material.side = THREE.DoubleSide
+        sharkMesh.add(fin)
+
+        // 眼
+        const eyeGeo = new THREE.SphereGeometry(0.15, 8, 8)
+        const eyeMat = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+        const eyeL = new THREE.Mesh(eyeGeo, eyeMat)
+        eyeL.position.set(0.5, 0.3, -3)
+        sharkMesh.add(eyeL)
+        const eyeR = eyeL.clone()
+        eyeR.position.set(-0.5, 0.3, -3)
+        sharkMesh.add(eyeR)
+
+        // 嘴
+        const jawGeo = new THREE.ConeGeometry(0.8, 2, 8)
+        jawGeo.rotateX(-Math.PI / 2)
+        sharkJaw = new THREE.Mesh(jawGeo, new THREE.MeshPhongMaterial({ color: 0x333333, flatShading: true }))
+        sharkJaw.position.set(0, 0, -3.4)
+        sharkJaw.scale.set(1.4, 1.2, 1.4)
+        sharkMesh.add(sharkJaw)
+      }
+
+      // === 核心逻辑：创建海底光缆 ===
+      function generateCables() {
+        cables.forEach((c) => {
+          scene.remove(c.mesh)
+          if (c.indicatorEl) c.indicatorEl.remove()
+        })
+        cables = []
+
+        // 确定电缆的生成参考点。如果正在游戏，则使用鲨鱼的当前位置，否则使用原点。
+        const refPosition = gameState.isPlaying ? sharkContainer.position.clone() : new THREE.Vector3(0, 0, 0)
+
+        for (let i = 0; i < CONFIG.cableCount; i++) {
+          // 传入参考位置，使新电缆生成在鲨鱼前方
+          spawnCable(refPosition)
+        }
+      }
+
+      function spawnCable(refPosition) {
+        const pathPoints = []
+
+        // 确保新电缆刷新在鲨鱼前方，并且位置是随机散布的。
+        const spawnDistance = 150 // 新电缆距离鲨鱼的大致距离
+        // 获取鲨鱼的前进方向 (Z 轴负方向，以世界坐标系表示)
+        const forwardVector = new THREE.Vector3(0, 0, -1).applyQuaternion(sharkContainer.quaternion)
+
+        // 1. 计算基本生成点 (鲨鱼位置 + 前方距离)
+        let basePos = refPosition.clone().add(forwardVector.clone().multiplyScalar(spawnDistance))
+
+        // 2. 计算侧向和垂直的随机偏移 (确保散布在鲨鱼的视野周围)
+        const upVector = new THREE.Vector3(0, 1, 0).applyQuaternion(sharkContainer.quaternion)
+        const rightVector = new THREE.Vector3(1, 0, 0).applyQuaternion(sharkContainer.quaternion)
+
+        // 侧向 +/- 50
+        basePos.add(rightVector.clone().multiplyScalar((Math.random() - 0.5) * 100))
+        // 垂直 +/- 30
+        basePos.add(upVector.clone().multiplyScalar((Math.random() - 0.5) * 60))
+
+        // 3. 增加沿前进方向的随机抖动
+        basePos.add(forwardVector.clone().multiplyScalar((Math.random() - 0.5) * 50))
+
+        let currentPos = basePos.clone()
+
+        for (let j = 0; j < 20; j++) {
+          pathPoints.push(currentPos.clone())
+          // 让电缆的路径保持随机蜿蜒的特性
+          currentPos.x += (Math.random() - 0.5) * 30
+          currentPos.y += (Math.random() - 0.5) * 10
+          currentPos.z -= Math.random() * 40 + 20
+        }
+
+        const curve = new THREE.CatmullRomCurve3(pathPoints)
+        const geometry = new THREE.TubeGeometry(curve, 64, 0.3, 8, false)
+        const material = new THREE.MeshStandardMaterial({
+          color: 0x222222,
+          emissive: CONFIG.colors.cable,
+          emissiveIntensity: 2,
+          roughness: 0.4,
+          metalness: 0.8,
+        })
+
+        const mesh = new THREE.Mesh(geometry, material)
+        scene.add(mesh)
+
+        const indicatorEl = document.createElement('div')
+        indicatorEl.className = 'indicator'
+        indicatorsContainer.appendChild(indicatorEl)
+
+        const points = curve.getPoints(50)
+        const targetPoint = points[Math.floor(points.length / 2)].clone()
+
+        cables.push({
+          mesh: mesh,
+          curve: curve,
+          points: points,
+          active: true,
+          indicatorEl: indicatorEl,
+          targetPoint: targetPoint,
+        })
+      }
+
+      // === 环境粒子 ===
+      function createEnvironment() {
+        const partGeo = new THREE.BufferGeometry()
+        const partCount = 500
+        const posArray = new Float32Array(partCount * 3)
+        for (let i = 0; i < partCount * 3; i++) {
+          posArray[i] = (Math.random() - 0.5) * 200
+        }
+        partGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3))
+        const partMat = new THREE.PointsMaterial({
+          size: 0.5,
+          color: 0x88aaff,
+          transparent: true,
+          opacity: 0.6,
+        })
+        const particleSystem = new THREE.Points(partGeo, partMat)
+        scene.add(particleSystem)
+        particles.push(particleSystem)
+      }
+
+      // === 爆炸特效 ===
+      function createExplosion(position) {
+        const particleCount = 50
+        const geometry = new THREE.BufferGeometry()
+        const positions = []
+        const velocities = []
+
+        for (let i = 0; i < particleCount; i++) {
+          positions.push(position.x, position.y, position.z)
+          // 随机向四周扩散的速度
+          velocities.push((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3)
+        }
+
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+
+        const material = new THREE.PointsMaterial({
+          color: 0xff5500, // 爆炸橙红色
+          size: 0.5,
+          transparent: true,
+          opacity: 1,
+          blending: THREE.AdditiveBlending,
+        })
+
+        const explosionMesh = new THREE.Points(geometry, material)
+        scene.add(explosionMesh)
+
+        explosions.push({
+          mesh: explosionMesh,
+          velocities: velocities,
+          age: 0,
+          maxAge: 60, // 持续帧数
+        })
+      }
+
+      function createLabel(text) {
+        const canvas = document.createElement('canvas')
+        const ctx = canvas.getContext('2d')
+        const fontSize = 32
+        ctx.font = `bold ${fontSize}px "Courier New"`
+        const textMetrics = ctx.measureText(text)
+        const textWidth = textMetrics.width
+
+        canvas.width = textWidth + 20
+        canvas.height = fontSize + 20
+
+        // Re-set font after resizing canvas
+        ctx.font = `bold ${fontSize}px "Courier New"`
+        ctx.fillStyle = '#00ffcc'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.shadowColor = '#00ffcc'
+        ctx.shadowBlur = 5
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2)
+
+        const texture = new THREE.CanvasTexture(canvas)
+        const material = new THREE.SpriteMaterial({ map: texture, transparent: true })
+        const sprite = new THREE.Sprite(material)
+        // Scale sprite to be reasonable size in world units
+        sprite.scale.set(canvas.width / 60, canvas.height / 60, 1)
+        return sprite
+      }
+
+      // === 敌人生成逻辑 ===
+      function spawnEnemy() {
+        if (!gameState.isPlaying) return
+
+        const typeRand = Math.random()
+        let type = 'aws'
+        if (typeRand > 0.7) type = 'azure'
+        if (typeRand > 0.9) type = 'gcp'
+
+        const sharkDir = new THREE.Vector3()
+        sharkContainer.getWorldDirection(sharkDir)
+        sharkDir.normalize()
+
+        const spawnDist = 60 + Math.random() * 20
+        const spawnBase = sharkContainer.position.clone().add(sharkDir.multiplyScalar(spawnDist))
+
+        const offset = new THREE.Vector3(
+          (Math.random() - 0.5) * 60,
+          (Math.random() - 0.5) * 40,
+          (Math.random() - 0.5) * 20
+        )
+        const spawnPos = spawnBase.add(offset)
+
+        let geo, mat, speed, damage, labelText
+
+        if (type === 'aws') {
+          geo = new THREE.BoxGeometry(2, 2, 2)
+          mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.aws, emissive: 0xff6600, emissiveIntensity: 0.5 })
+          speed = 0.4
+          damage = 10
+          labelText = 'AWS Enforcer'
+        } else if (type === 'azure') {
+          geo = new THREE.TetrahedronGeometry(1.5)
+          mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.azure, emissive: 0x0000ff, emissiveIntensity: 0.5 })
+          speed = 0.7
+          damage = 5
+          labelText = 'Azure Sentinel'
+        } else {
+          geo = new THREE.IcosahedronGeometry(1.2, 1)
+          mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.gcp, wireframe: true, emissive: 0xffffff })
+          speed = 0.55
+          damage = 20
+          labelText = 'GCP Guardian'
+        }
+
+        const group = new THREE.Group()
+        group.position.copy(spawnPos)
+
+        const mesh = new THREE.Mesh(geo, mat)
+        group.add(mesh)
+
+        const label = createLabel(labelText)
+        label.position.set(0, 2.5, 0) // Position label above the drone
+        group.add(label)
+
+        scene.add(group)
+
+        enemies.push({
+          group: group, // Store group instead of mesh
+          mesh: mesh, // Keep reference to mesh for rotation
+          type: type,
+          speed: speed,
+          damage: damage,
+          life: 100,
+        })
+      }
+
+      // === 输入处理 (鼠标控制) ===
+      function onMouseMoveInfinite(event) {
+        if (isLookingBack) return
+        if (document.pointerLockElement === document.body && gameState.isPlaying) {
+          // 累积 Yaw (Y轴旋转)
+          sharkEuler.y -= event.movementX * CONFIG.mouseSensitivity
+
+          // 累积 Pitch (X轴旋转) - 鼠标上移 = 抬头 (非反转控制)
+          sharkEuler.x -= event.movementY * CONFIG.mouseSensitivity
+
+          // 限制上下俯仰角度，防止翻个底朝天 (限制在 -80度 到 80度)
+          sharkEuler.x = Math.max(-1.4, Math.min(1.4, sharkEuler.x))
+        }
+      }
+
+      function onMouseDown(event) {
+        if (!gameState.isPlaying) return
+        if (gameState.isPaused) return
+
+        if (event.button === 2) {
+          isLookingBack = true
+          return
+        }
+
+        if (document.pointerLockElement !== document.body) {
+          document.body.requestPointerLock()
+        }
+        isBoosting = true
+        soundManager.playBoost()
+      }
+      function onMouseUp(event) {
+        if (event.button === 2) {
+          isLookingBack = false
+          return
+        }
+        isBoosting = false
+      }
+
+      function togglePause(pause) {
+        if (!gameState.isPlaying) return // Can't pause if not playing
+
+        gameState.isPaused = pause
+
+        if (gameState.isPaused) {
+          pauseMenu.style.display = 'flex'
+          document.exitPointerLock()
+          // Sync sliders when opening pause menu
+          bgmSliderPause.value = bgmSlider.value
+          sfxSliderPause.value = sfxSlider.value
+        } else {
+          pauseMenu.style.display = 'none'
+          document.body.requestPointerLock()
+        }
+      }
+
+      function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight
+        camera.updateProjectionMatrix()
+        renderer.setSize(window.innerWidth, window.innerHeight)
+      }
+
+      // === 游戏逻辑 ===
+      async function startGame() {
+        try {
+          if (document.documentElement.requestFullscreen) {
+            await document.documentElement.requestFullscreen()
+          }
+        } catch (e) {
+          console.log('全屏请求被拒绝或不支持')
+        }
+
+        soundManager.init()
+        soundManager.playBGM()
+
+        document.body.requestPointerLock()
+
+        gameState.isPlaying = true
+        gameState.isPaused = false
+        gameState.score = 0
+        gameState.cablesCut = 0
+        gameState.health = 100
+        uiMessage.style.display = 'none'
+
+        sharkContainer.position.set(0, 0, 0)
+        // 重置旋转使用四元数
+        sharkContainer.quaternion.identity()
+        sharkEuler = { x: 0, y: 0 }
+
+        enemies.forEach((e) => scene.remove(e.group))
+        enemies = []
+
+        // 初始生成电缆
+        generateCables()
+        updateHUD()
+      }
+
+      function gameOver() {
+        soundManager.playGameOver()
+        gameState.isPlaying = false
+        document.exitPointerLock()
+        uiMessage.style.display = 'block'
+        document.querySelector('#message-center h1').innerText = '连接断开'
+        document.querySelector(
+          '#message-center p'
+        ).innerHTML = `任务失败。<br>你切断了 ${gameState.score} TB 的数据。<br>但云端备份依然存在...`
+        startBtn.innerText = '重新连接'
+      }
+
+      function takeDamage(amount) {
+        gameState.health -= amount
+        damageOverlay.style.opacity = 0.8
+        setTimeout(() => {
+          damageOverlay.style.opacity = 0
+        }, 300)
+
+        if (gameState.health <= 0) {
+          gameState.health = 0
+          gameOver()
+        }
+        updateHUD()
+      }
+
+      function updateHUD() {
+        uiScore.innerText = `断网进度: ${gameState.score} TB`
+        uiHealth.style.width = `${gameState.health}%`
+      }
+
+      function updateIndicators() {
+        const width = window.innerWidth
+        const height = window.innerHeight
+        const widthHalf = width / 2
+        const heightHalf = height / 2
+
+        cables.forEach((cable) => {
+          if (!cable.active) {
+            cable.indicatorEl.style.display = 'none'
+            return
+          }
+
+          const pos = cable.targetPoint.clone()
+          pos.project(camera)
+
+          const isBehind = pos.z > 1
+          const isOnScreen = pos.x > -0.9 && pos.x < 0.9 && pos.y > -0.9 && pos.y < 0.9 && !isBehind
+
+          if (isOnScreen) {
+            cable.indicatorEl.style.display = 'none'
+          } else {
+            cable.indicatorEl.style.display = 'block'
+
+            let tx = pos.x
+            let ty = pos.y
+
+            if (isBehind) {
+              tx = -tx
+              ty = -ty
+            }
+
+            const angle = Math.atan2(ty, tx)
+            const absX = Math.abs(tx)
+            const absY = Math.abs(ty)
+
+            let screenX, screenY
+
+            if (absX > absY) {
+              const scale = 0.9 / absX
+              tx = (tx > 0 ? 1 : -1) * 0.9
+              ty = ty * scale
+            } else {
+              const scale = 0.9 / absY
+              ty = (ty > 0 ? 1 : -1) * 0.9
+              tx = tx * scale
+            }
+
+            screenX = tx * widthHalf + widthHalf
+            screenY = -(ty * heightHalf) + heightHalf
+
+            cable.indicatorEl.style.left = `${screenX}px`
+            cable.indicatorEl.style.top = `${screenY}px`
+
+            const deg = (angle * 180) / Math.PI - 90
+            cable.indicatorEl.style.transform = `translate(-50%, -50%) rotate(${-deg}deg)`
+          }
+        })
+      }
+
+      // === 主循环 ===
+      function animate(currentTime) {
+        requestAnimationFrame(animate)
+
+        if (!currentTime) currentTime = performance.now()
+        const elapsed = currentTime - lastFrameTime
+        if (elapsed < fpsInterval) return
+        lastFrameTime = currentTime - (elapsed % fpsInterval)
+
+        const delta = clock.getDelta()
+        const time = clock.getElapsedTime()
+
+        if (!gameState.isPlaying) {
+          scene.rotation.y = 0
+          // 侧前方视角：X=12(右侧), Y=4(上方), Z=-10(前方, 鲨鱼面向-Z)
+          camera.position.set(12, 4, -10)
+          camera.lookAt(0, 0, 0)
+          renderer.render(scene, camera)
+          return
+        } else {
+          if (gameState.isPaused) {
+            renderer.render(scene, camera) // Keep rendering static frame
+            return
+          }
+          scene.rotation.y = 0
+        }
+
+        // 1. 鲨鱼运动逻辑 (更新)
+        const targetPitch = sharkEuler.x
+        const targetYaw = sharkEuler.y
+
+        // 使用四元数 Slerp 进行平滑旋转
+
+        // 1.1. 根据鼠标输入的 Pitch (X) 和 Yaw (Y) 创建目标欧拉角
+        // 使用 'YXZ' 顺序，这在飞行/自由移动控制中较为常用
+        const targetEuler = new THREE.Euler(targetPitch, targetYaw, 0, 'YXZ')
+        targetRotation.setFromEuler(targetEuler)
+
+        // 1.2. 计算侧倾 (Roll)
+        // 获取当前的 Yaw 值 (通过将四元数转回欧拉角)
+        const currentEuler = new THREE.Euler().setFromQuaternion(sharkContainer.quaternion, 'YXZ')
+        // 计算目标 Yaw 和当前 Yaw 之间的差值 (作为转向速度的近似)
+        const yawDelta = targetYaw - currentEuler.y
+
+        // 计算目标 Roll：基于转向速度（yawDelta）。限制 Roll 幅度在 -45度 (0.78 rad) 到 45度
+        const targetRoll = Math.max(-0.78, Math.min(0.78, -yawDelta * 5 * CONFIG.rollFactor))
+
+        // 1.3. 将 Roll (Z轴旋转) 应用到目标四元数上
+        // 创建一个只包含 Roll 的四元数
+        const rollQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, -1), targetRoll)
+        // 将 Roll 合并到目标旋转中
+        targetRotation.multiply(rollQuaternion)
+
+        // 1.4. 使用 Slerp 平滑插值当前的四元数到目标四元数
+        sharkContainer.quaternion.slerp(targetRotation, CONFIG.turnSpeed)
+
+        // 始终向前移动 (沿自身的 Z 轴)
+        const currentSpeed = isBoosting ? CONFIG.boostSpeed : CONFIG.sharkSpeed
+        sharkContainer.translateZ(-currentSpeed)
+
+        // 摄像机跟随 (Lerp)
+        let relativeCameraOffset
+        let lookAtTarget
+
+        if (isLookingBack) {
+          // 侧前方: 右 8, 上 5, 前 20 (Z 为负是前)
+          relativeCameraOffset = new THREE.Vector3(8, 5, -20)
+
+          // 看向身后: 获取后方向量
+          const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(sharkContainer.quaternion)
+          lookAtTarget = sharkContainer.position.clone().add(backward.multiplyScalar(20))
+        } else {
+          relativeCameraOffset = new THREE.Vector3(0, 5, CONFIG.cameraDistance)
+
+          const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(sharkContainer.quaternion)
+          lookAtTarget = sharkContainer.position.clone().add(forward.multiplyScalar(10))
+        }
+
+        const cameraOffset = relativeCameraOffset.applyMatrix4(sharkContainer.matrixWorld)
+
+        camera.position.lerp(cameraOffset, 0.1)
+        camera.lookAt(lookAtTarget)
+
+        // 尾巴摆动
+        sharkMesh.children[0].rotation.y = Math.sin(time * (isBoosting ? 20 : 8)) * 0.5
+
+        // 2. 光缆逻辑与碰撞
+        const biteRadius = 4.0
+
+        for (let i = cables.length - 1; i >= 0; i--) {
+          const cable = cables[i]
+          if (!cable.active) continue
+
+          let hit = false
+          let hitPoint = null
+          for (let p of cable.points) {
+            if (p.distanceTo(sharkContainer.position) < biteRadius) {
+              hit = true
+              hitPoint = p.clone()
+              break
+            }
+          }
+
+          if (hit && isBoosting) {
+            gameState.score += 1024
+            gameState.cablesCut++
+            soundManager.playCut()
+            createExplosion(hitPoint) // 触发爆炸特效
+            updateHUD()
+
+            cable.mesh.material.emissive.setHex(0x000000)
+            cable.mesh.material.color.setHex(0x333333)
+            cable.mesh.position.y -= 1
+            cable.active = false
+          }
+        }
+
+        // 所有电缆都被切断后，重新生成电缆组
+        if (cables.every((c) => !c.active)) {
+          generateCables() // 基于鲨鱼当前位置生成
+          gameState.score += 5000
+          updateHUD()
+        }
+
+        // 3. 敌人逻辑
+        const spawnChance = 0.01 + gameState.cablesCut * 0.002
+
+        if (Math.random() < spawnChance) {
+          spawnEnemy()
+        }
+
+        for (let i = enemies.length - 1; i >= 0; i--) {
+          const e = enemies[i]
+
+          e.group.lookAt(sharkContainer.position)
+          e.group.translateZ(e.speed)
+
+          if (e.type === 'aws') e.mesh.rotation.z += 0.1
+          if (e.type === 'azure') e.mesh.rotation.x += 0.1
+
+          const dist = e.group.position.distanceTo(sharkContainer.position)
+
+          if (dist < 2.5) {
+            takeDamage(e.damage)
+            soundManager.playDamage()
+            scene.remove(e.group)
+            enemies.splice(i, 1)
+            continue
+          }
+
+          if (dist > 200) {
+            scene.remove(e.group)
+            enemies.splice(i, 1)
+          }
+        }
+
+        // 4. 粒子动画
+        particles.forEach((p) => {
+          // 如果粒子系统离鲨鱼太远，则将其移到鲨鱼前方
+          if (sharkContainer.position.distanceTo(p.position) > 200) {
+            p.position.copy(sharkContainer.position)
+            p.position.z -= 100
+          }
+          p.rotation.y += 0.001
+        })
+
+        // 5. 更新爆炸特效
+        for (let i = explosions.length - 1; i >= 0; i--) {
+          const exp = explosions[i]
+          exp.age++
+          const positions = exp.mesh.geometry.attributes.position.array
+
+          for (let j = 0; j < exp.velocities.length / 3; j++) {
+            positions[j * 3] += exp.velocities[j * 3]
+            positions[j * 3 + 1] += exp.velocities[j * 3 + 1]
+            positions[j * 3 + 2] += exp.velocities[j * 3 + 2]
+          }
+          exp.mesh.geometry.attributes.position.needsUpdate = true
+          exp.mesh.material.opacity = 1 - exp.age / exp.maxAge
+
+          if (exp.age >= exp.maxAge) {
+            scene.remove(exp.mesh)
+            exp.mesh.geometry.dispose()
+            exp.mesh.material.dispose()
+            explosions.splice(i, 1)
+          }
+        }
+
+        updateIndicators()
+        renderer.render(scene, camera)
+      }
+
+      // === 音效系统 ===
+      class SoundManager {
+        constructor() {
+          this.ctx = null
+          this.masterGain = null
+          this.bgmGain = null
+          this.sfxGain = null
+          this.bgmAudio = null
+          this.isMuted = false
+          this.noiseBuffer = null
+        }
+
+        init() {
+          if (this.ctx) return
+          const AudioContext = window.AudioContext || window.webkitAudioContext
+          this.ctx = new AudioContext()
+
+          this.masterGain = this.ctx.createGain()
+          this.masterGain.gain.value = 1.0
+          this.masterGain.connect(this.ctx.destination)
+
+          // BGM Channel
+          this.bgmGain = this.ctx.createGain()
+          this.bgmGain.gain.value = 0.3
+          this.bgmGain.connect(this.masterGain)
+
+          this.bgmAudio = new Audio('bgm.mp3')
+          this.bgmAudio.loop = true
+          // Use MediaElementSource to route audio element through Web Audio API
+          const bgmSource = this.ctx.createMediaElementSource(this.bgmAudio)
+          bgmSource.connect(this.bgmGain)
+
+          // SFX Channel
+          this.sfxGain = this.ctx.createGain()
+          this.sfxGain.gain.value = 0.5
+          this.sfxGain.connect(this.masterGain)
+
+          this.startAmbient()
+          this.noiseBuffer = this.createNoiseBuffer()
+        }
+
+        createNoiseBuffer() {
+          const bufferSize = this.ctx.sampleRate * 2 // 2 seconds
+          const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate)
+          const data = buffer.getChannelData(0)
+          for (let i = 0; i < bufferSize; i++) {
+            data[i] = Math.random() * 2 - 1
+          }
+          return buffer
+        }
+
+        playBGM() {
+          if (this.bgmAudio && this.ctx) {
+            if (this.ctx.state === 'suspended') {
+              this.ctx.resume()
+            }
+            this.bgmAudio.play().catch((e) => console.log('BGM play failed (likely autoplay policy):', e))
+          }
+        }
+
+        setBGMVolume(val) {
+          if (this.bgmGain) {
+            this.bgmGain.gain.setValueAtTime(val, this.ctx.currentTime)
+          }
+        }
+
+        setSFXVolume(val) {
+          if (this.sfxGain) {
+            this.sfxGain.gain.setValueAtTime(val, this.ctx.currentTime)
+          }
+        }
+
+        playTone(freq, type, duration, startTime = 0, vol = 1) {
+          if (!this.ctx) return
+          const osc = this.ctx.createOscillator()
+          const gain = this.ctx.createGain()
+          osc.type = type
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + startTime)
+          gain.gain.setValueAtTime(vol, this.ctx.currentTime + startTime)
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + startTime + duration)
+          osc.connect(gain)
+          gain.connect(this.sfxGain) // Connect to SFX gain
+          osc.start(this.ctx.currentTime + startTime)
+          osc.stop(this.ctx.currentTime + startTime + duration)
+        }
+
+        playBoost() {
+          if (!this.ctx) return
+          const osc = this.ctx.createOscillator()
+          const gain = this.ctx.createGain()
+          osc.frequency.setValueAtTime(100, this.ctx.currentTime)
+          osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.3)
+          gain.gain.setValueAtTime(0.5, this.ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3)
+          osc.connect(gain)
+          gain.connect(this.sfxGain) // Connect to SFX gain
+          osc.start()
+          osc.stop(this.ctx.currentTime + 0.3)
+        }
+
+        playCut() {
+          // 爆炸音效
+          if (!this.ctx || !this.noiseBuffer) return
+          const source = this.ctx.createBufferSource()
+          source.buffer = this.noiseBuffer
+          const gain = this.ctx.createGain()
+
+          // 低通滤波，模拟爆炸的沉闷感
+          const filter = this.ctx.createBiquadFilter()
+          filter.type = 'lowpass'
+          filter.frequency.setValueAtTime(800, this.ctx.currentTime)
+          filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.5)
+
+          source.connect(filter)
+          filter.connect(gain)
+          gain.connect(this.sfxGain)
+
+          gain.gain.setValueAtTime(0.8, this.ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.5)
+
+          source.start()
+          source.stop(this.ctx.currentTime + 0.5)
+        }
+
+        playDamage() {
+          this.playTone(150, 'square', 0.3, 0, 0.8)
+          this.playTone(100, 'sawtooth', 0.4, 0, 0.8)
+        }
+
+        playGameOver() {
+          this.playTone(300, 'triangle', 0.5, 0)
+          this.playTone(250, 'triangle', 0.5, 0.4)
+          this.playTone(200, 'triangle', 1.0, 0.8)
+        }
+
+        startAmbient() {
+          if (!this.ctx) return
+          const createRumble = (freq, vol) => {
+            const osc = this.ctx.createOscillator()
+            const gain = this.ctx.createGain()
+            osc.frequency.value = freq
+            gain.gain.value = vol
+            osc.connect(gain)
+            gain.connect(this.sfxGain) // Ambient is technically SFX here, or could be separate. Let's put it on SFX for now or maybe its own? Plan said SFX.
+            osc.start()
+          }
+          createRumble(30, 0.1)
+          createRumble(45, 0.05)
+        }
+      }
+
+      const soundManager = new SoundManager()
+
+      init()
+    </script>
+  </body>
+</html>
