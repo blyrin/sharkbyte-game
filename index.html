@@ -694,11 +694,11 @@
     staminaRecoverRate: 0.2, // 每帧恢复
     minStaminaToBoost: 1, // 最低冲刺需求
     recoverStamina: 40, // 咬断电缆恢复的耐力
-    enemyRemoveDistance: 150, // 敌人超过此距离后删除
-    maxEnemies: 80, // 最大敌人数
-    enemySpeedAWS: 0.45, // AWS 敌人移动速度
-    enemySpeedAzure: 0.5, // Azure 敌人移动速度
-    enemySpeedGCP: 0.5, // GCP 敌人移动速度
+    enemyRemoveDistance: 160, // 敌人超过此距离后删除
+    maxEnemies: 100, // 最大敌人数
+    enemySpeedAWS: 0.6, // AWS 敌人移动速度
+    enemySpeedAzure: 0.7, // Azure 敌人移动速度
+    enemySpeedGCP: 0.6, // GCP 敌人移动速度
     colors: {
       shark: 0x667788,
       cable: 0x00ffcc, // 霓虹蓝
@@ -1082,13 +1082,13 @@
     const upVector = new THREE.Vector3(0, 1, 0).applyQuaternion(sharkContainer.quaternion)
     const rightVector = new THREE.Vector3(1, 0, 0).applyQuaternion(sharkContainer.quaternion)
 
-    // 侧向 +/- 50
-    basePos.add(rightVector.clone().multiplyScalar((Math.random() - 0.5) * 100))
-    // 垂直 +/- 30
-    basePos.add(upVector.clone().multiplyScalar((Math.random() - 0.5) * 60))
+    // 侧向
+    basePos.add(rightVector.clone().multiplyScalar((Math.random() - 0.5) * 10 * gameState.cableCount))
+    // 垂直
+    basePos.add(upVector.clone().multiplyScalar((Math.random() - 0.5) * 10 * gameState.cableCount))
 
     // 3. 增加沿前进方向的随机抖动
-    basePos.add(forwardVector.clone().multiplyScalar((Math.random() - 0.5) * 50))
+    basePos.add(forwardVector.clone().multiplyScalar((Math.random() - 0.5) * 100))
 
     let currentPos = basePos.clone()
 
