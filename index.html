@@ -637,7 +637,7 @@
     staminaRecoverRate: 0.2, // 每帧恢复
     minStaminaToBoost: 1, // 最低冲刺需求
     recoverStamina: 40, // 咬断电缆恢复的耐力
-    enemyRemoveDistance: 100, // 敌人超过此距离后删除
+    enemyRemoveDistance: 150, // 敌人超过此距离后删除
     maxEnemies: 80, // 最大敌人数
     enemySpeedAWS: 0.45, // AWS 敌人移动速度
     enemySpeedAzure: 0.5, // Azure 敌人移动速度
@@ -694,6 +694,10 @@
   const fpsLimit = 60
   const fpsInterval = 1000 / fpsLimit
   let lastFrameTime = performance.now()
+
+  // 指示器更新频率控制
+  let indicatorUpdateCounter = 0
+  const indicatorUpdateInterval = 2 // 每2帧更新一次指示器
 
   // 界面元素
   const uiScore = document.getElementById('score-display')
@@ -800,10 +804,13 @@
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200)
 
     // 渲染器
-    renderer = new THREE.WebGLRenderer({ antialias: true })
+    renderer = new THREE.WebGLRenderer({ 
+      antialias: true,
+      powerPreference: 'high-performance' // 请求高性能模式
+    })
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
     renderer.setSize(window.innerWidth, window.innerHeight)
-    renderer.shadowMap.enabled = true
+    renderer.shadowMap.enabled = false
     document.getElementById('game-container').appendChild(renderer.domElement)
 
     // 灯光
@@ -812,7 +819,7 @@
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8)
     dirLight.position.set(10, 50, 20)
-    dirLight.castShadow = true
+    dirLight.castShadow = false
     scene.add(dirLight)
 
     // 聚光灯（模拟鲨鱼头灯/海底光线）
@@ -940,11 +947,11 @@
     scene.add(sharkContainer)
 
     // 身体
-    const bodyGeo = new THREE.ConeGeometry(1, 4, 8)
+    const bodyGeo = new THREE.ConeGeometry(1, 4, 6)
     bodyGeo.rotateX(Math.PI / 2) // 让圆锥躺下，指向 Z 轴（Three.js 默认朝向）
     const bodyMat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.shark, flatShading: true })
     sharkMesh = new THREE.Mesh(bodyGeo, bodyMat)
-    sharkMesh.castShadow = true
+    sharkMesh.castShadow = false
     sharkContainer.add(sharkMesh)
 
     // 尾巴
@@ -1037,7 +1044,7 @@
     }
 
     const curve = new THREE.CatmullRomCurve3(pathPoints)
-    const geometry = new THREE.TubeGeometry(curve, 64, 0.3, 8, false)
+    const geometry = new THREE.TubeGeometry(curve, 32, 0.3, 6, false)
     const material = new THREE.MeshStandardMaterial({
       color: 0x222222,
       emissive: CONFIG.colors.cable,
@@ -1049,7 +1056,7 @@
     const mesh = new THREE.Mesh(geometry, material)
     scene.add(mesh)
 
-    const points = curve.getPoints(50)
+    const points = curve.getPoints(30)
 
     // 创建光缆指示器元素
     const indicatorEl = document.createElement('div')
@@ -1068,7 +1075,7 @@
   // === 环境粒子 ===
   function createEnvironment() {
     const partGeo = new THREE.BufferGeometry()
-    const partCount = 500
+    const partCount = 250
     const posArray = new Float32Array(partCount * 3)
     for (let i = 0; i < partCount * 3; i++) {
       posArray[i] = (Math.random() - 0.5) * 200
@@ -1087,7 +1094,7 @@
 
   // === 爆炸特效 ===
   function createExplosion(position) {
-    const particleCount = 100
+    const particleCount = 50
     const geometry = new THREE.BufferGeometry()
     const positions = []
     const velocities = []
@@ -1102,7 +1109,7 @@
 
     const material = new THREE.PointsMaterial({
       color: 0xff5500, // 爆炸橙红色
-      size: 0.5,
+      size: 0.6, // 稍微增大粒子大小以补偿数量减少
       transparent: true,
       opacity: 1,
       blending: THREE.AdditiveBlending,
@@ -1115,7 +1122,7 @@
       mesh: explosionMesh,
       velocities: velocities,
       age: 0,
-      maxAge: 180, // 持续帧数
+      maxAge: 120,
     })
   }
 
@@ -1189,19 +1196,34 @@
 
     if (type === 'aws') {
       geo = new THREE.BoxGeometry(2, 2, 2)
-      mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.aws, emissive: 0xff6600, emissiveIntensity: 0.5 })
+      mat = new THREE.MeshPhongMaterial({ 
+        color: CONFIG.colors.aws, 
+        emissive: 0xff6600, 
+        emissiveIntensity: 0.5,
+        flatShading: true // 使用平面着色减少计算
+      })
       speed = CONFIG.enemySpeedAWS
       damage = 10
       labelText = 'AWS Enforcer'
     } else if (type === 'azure') {
       geo = new THREE.TetrahedronGeometry(1.5)
-      mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.azure, emissive: 0x0000ff, emissiveIntensity: 0.5 })
+      mat = new THREE.MeshPhongMaterial({ 
+        color: CONFIG.colors.azure, 
+        emissive: 0x0000ff, 
+        emissiveIntensity: 0.5,
+        flatShading: true // 使用平面着色减少计算
+      })
       speed = CONFIG.enemySpeedAzure
       damage = 5
       labelText = 'Azure Sentinel'
     } else {
-      geo = new THREE.IcosahedronGeometry(1.2, 1)
-      mat = new THREE.MeshPhongMaterial({ color: CONFIG.colors.gcp, wireframe: true, emissive: 0xffffff })
+      geo = new THREE.IcosahedronGeometry(1.2, 0) // 降低细分级别从1到0
+      mat = new THREE.MeshPhongMaterial({ 
+        color: CONFIG.colors.gcp, 
+        wireframe: true, 
+        emissive: 0xffffff,
+        flatShading: true // 使用平面着色减少计算
+      })
       speed = CONFIG.enemySpeedGCP
       damage = 20
       labelText = 'GCP Guardian'
@@ -1884,7 +1906,13 @@
       }
     }
 
-    updateIndicators()
+    // 降低指示器更新频率以提升性能
+    indicatorUpdateCounter++
+    if (indicatorUpdateCounter >= indicatorUpdateInterval) {
+      updateIndicators()
+      indicatorUpdateCounter = 0
+    }
+
     renderer.render(scene, camera)
   }
 
